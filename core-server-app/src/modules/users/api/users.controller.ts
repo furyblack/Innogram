@@ -1,38 +1,42 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import * as usersService from '../application/users.service';
-
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+} from '@nestjs/common';
+import { UsersService } from '../application/users.service';
+import { CreateUserDto } from '../dto/create-user-dto';
+import { UpdateUserDto } from '../dto/update-user-dto';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: usersService.UsersService) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  create(@Body() body: { username: string; email: string; password: string }): usersService.User {
-    return this.usersService.createUser(body.username, body.email, body.password);
+  createUser(@Body() dto: CreateUserDto) {
+    return this.usersService.createUser(dto);
   }
 
   @Get()
-  findAll(): usersService.User[] {
-    
-    return this.usersService.findAll();
+  getAllUsers() {
+    return this.usersService.getUsers();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): usersService.User {
-    return this.usersService.findById(id);
+  getUser(@Param('id') id: string) {
+    return this.usersService.getUserById(+id);
   }
 
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() body: Partial<{ username: string; email: string; password: string }>
-  ): usersService.User {
-    return this.usersService.updateUser(id, body);
+  @Put(':id')
+  updateUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.usersService.updateUser(+id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    this.usersService.removeUser(id);
-    return { message: 'User deleted' };
+  deleteUser(@Param('id') id: string) {
+    return this.usersService.deleteUser(+id);
   }
 }

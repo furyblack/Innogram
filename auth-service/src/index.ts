@@ -1,10 +1,10 @@
-import express from 'express';
+import express from "express";
 
 const app = express();
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.send('Auth service is running 🚀');
+app.get("/", (req, res) => {
+  res.send("Auth service is running 🚀");
 });
 
 const PORT = process.env.PORT || 4000;

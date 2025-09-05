@@ -1,14 +1,27 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import * as postsService from '../application/posts.service';
-
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: postsService.PostsService) {}
 
   @Post()
-  create(@Body() body: { authorId: string; title: string; content: string }): postsService.Post {
-    return this.postsService.createPost(body.authorId, body.title, body.content);
+  create(
+    @Body() body: { authorId: string; title: string; content: string },
+  ): postsService.Post {
+    return this.postsService.createPost(
+      body.authorId,
+      body.title,
+      body.content,
+    );
   }
 
   @Get()
@@ -22,7 +35,10 @@ export class PostsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: Partial<{ title: string; content: string }>): postsService.Post {
+  update(
+    @Param('id') id: string,
+    @Body() body: Partial<{ title: string; content: string }>,
+  ): postsService.Post {
     return this.postsService.updatePost(id, body);
   }
 

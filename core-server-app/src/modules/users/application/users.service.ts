@@ -1,51 +1,52 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  password: string;
-}
+import { UsersRepository } from '../infrastructure/users.repository';
+import { User } from '../domain/user.entity';
+import { CreateUserDto } from '../dto/create-user-dto';
+import * as bcrypt from 'bcrypt';
+import { UpdateUserDto } from '../dto/update-user-dto';
 
 @Injectable()
 export class UsersService {
-  private users: User[] = []; // пока временно хранение в памяти
+  constructor(private readonly usersRepo: UsersRepository) {}
 
-  // Создание нового пользователя
-  createUser(username: string, email: string, password: string): User {
-    const newUser: User = {
-      id: (Math.random() * 1000000).toFixed(0),
-      username,
-      email,
-      password, // позже будем хешировать
-    };
-    this.users.push(newUser);
-    return newUser;
+  async createUser(dto: CreateUserDto): Promise<User> {
+    const password_hash = await bcrypt.hash(dto.password, 10);
+    return this.usersRepo.createUser({
+      username: dto.username,
+      email: dto.email,
+      phone_number: dto.phone_number,
+      password_hash,
+    });
   }
 
-  // Получить всех пользователей
-  findAll(): User[] {
-    return this.users;
+  async getUsers(): Promise<User[]> {
+    return this.usersRepo.findAll();
   }
 
-  // Найти пользователя по id
-  findById(id: string): User {
-    const user = this.users.find(u => u.id === id);
+  async getUserById(id: number): Promise<User> {
+    const user = await this.usersRepo.findById(id);
     if (!user) throw new NotFoundException('User not found');
     return user;
   }
 
-  // Обновить пользователя
-  updateUser(id: string, data: Partial<User>): User {
-    const user = this.findById(id);
-    Object.assign(user, data);
-    return user;
+  async updateUser(id: number, dto: UpdateUserDto): Promise<User> {
+    let password_hash: string | undefined;
+
+    if (dto.password) {
+      password_hash = await bcrypt.hash(dto.password, 10);
+    }
+
+    const updated = await this.usersRepo.updateUser(id, {
+      ...dto,
+      ...(password_hash ? { password_hash } : {}),
+    });
+
+    if (!updated) throw new NotFoundException('User not found');
+    return updated;
   }
 
-  // Удалить пользователя
-  removeUser(id: string): void {
-    const index = this.users.findIndex(u => u.id === id);
-    if (index === -1) throw new NotFoundException('User not found');
-    this.users.splice(index, 1);
+  async deleteUser(id: number): Promise<void> {
+    const deleted = await this.usersRepo.deleteUser(id);
+    if (!deleted) throw new NotFoundException('User not found');
   }
 }
