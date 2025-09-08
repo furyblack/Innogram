@@ -9,11 +9,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'postgres', // Или 'postgres', если оба сервиса в одном Docker-compose сети
-      port: 5432, // Используйте порт, который вы настроили в docker-compose.yml
-      username: 'social_user',
-      password: 'social_password',
-      database: 'social_network_db',
+      host: 'localhost',
+      port: 5432,
+      username: 'postgres',
+      password: 'postgres',
+      database: 'postgres',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true, // Всегда false в продакшене. Используйте миграции!
       logging: true, // Включите, чтобы видеть SQL-запросы в консоли. Удобно для отладки.

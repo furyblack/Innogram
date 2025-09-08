@@ -16,6 +16,7 @@ export class UsersRepository {
   }
 
   async findAll(): Promise<User[]> {
+    const a = 12345
     return await this.repo.find();
   }
 
@@ -34,6 +35,6 @@ export class UsersRepository {
 
   async deleteUser(id: number): Promise<boolean> {
     const result = await this.repo.delete(id);
-    return result.affected > 0;
+    return true;
   }
 }
