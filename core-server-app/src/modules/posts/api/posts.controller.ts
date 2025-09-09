@@ -5,46 +5,46 @@ import {
   Get,
   Param,
   Patch,
-  Post,
+  Post as HttpPost,
 } from '@nestjs/common';
-import * as postsService from '../application/posts.service';
+import { PostsService } from '../application/posts.service';
+import { CreatePostDto } from '../dto/create-post.dto';
+import { UpdatePostDto } from '../dto/update-post.dto';
+import { CurrentUser } from 'src/modules/users/decorators/current-user';
 
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: postsService.PostsService) {}
+  constructor(private readonly postsService: PostsService) {}
 
-  @Post()
-  create(
-    @Body() body: { authorId: string; title: string; content: string },
-  ): postsService.Post {
-    return this.postsService.createPost(
-      body.authorId,
-      body.title,
-      body.content,
-    );
+  @HttpPost()
+  async create(
+    @CurrentUser('userId') userId: number,
+    @Body() dto: CreatePostDto,
+  ) {
+    return this.postsService.createPost(userId, dto);
   }
 
   @Get()
-  findAll(): postsService.Post[] {
+  async findAll() {
     return this.postsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): postsService.Post {
+  async findOne(@Param('id') id: number) {
     return this.postsService.findById(id);
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() body: Partial<{ title: string; content: string }>,
-  ): postsService.Post {
-    return this.postsService.updatePost(id, body);
+  async update(
+    @Param('id') id: number,
+    @CurrentUser('userId') userId: number,
+    @Body() dto: UpdatePostDto,
+  ) {
+    return this.postsService.updatePost(id, userId, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    this.postsService.removePost(id);
-    return { message: 'Post deleted' };
+  async remove(@Param('id') id: number, @CurrentUser('userId') userId: number) {
+    return this.postsService.removePost(id, userId);
   }
 }

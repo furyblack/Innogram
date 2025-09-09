@@ -24,7 +24,7 @@ async function bootstrap() {
     origin: '*', // для разработки; в проде лучше список доменов
   });
 
-  const port = process.env.PORT ?? 3001;
+  const port = process.env.PORT || 3001;
   await app.listen(port);
   Logger.log(`🚀 Core backend running on http://localhost:${port}/api`);
 }

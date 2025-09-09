@@ -1,56 +1,43 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-
-export interface Post {
-  id: string;
-  authorId: string; // id пользователя
-  title: string;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { PostsRepository } from '../infrastructure/posts.repository';
+import { CreatePostDto } from '../dto/create-post.dto';
+import { UpdatePostDto } from '../dto/update-post.dto';
 
 @Injectable()
 export class PostsService {
-  private posts: Post[] = [];
+  constructor(private readonly postsRepo: PostsRepository) {}
 
-  // Создать новый пост
-  createPost(authorId: string, title: string, content: string): Post {
-    const newPost: Post = {
-      id: (Math.random() * 1000000).toFixed(0),
-      authorId,
-      title,
-      content,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.posts.push(newPost);
-    return newPost;
+  async createPost(userId: number, dto: CreatePostDto) {
+    return this.postsRepo.createPost(userId, dto);
   }
 
-  // Получить все посты
-  findAll(): Post[] {
-    return this.posts;
+  async findAll() {
+    return this.postsRepo.findAll();
   }
 
-  // Найти пост по id
-  findById(id: string): Post {
-    const post = this.posts.find((p) => p.id === id);
+  async findById(id: number) {
+    const post = await this.postsRepo.findById(id);
     if (!post) throw new NotFoundException('Post not found');
     return post;
   }
 
-  // Обновить пост
-  updatePost(id: string, data: Partial<Post>): Post {
-    const post = this.findById(id);
-    Object.assign(post, data);
-    post.updatedAt = new Date();
-    return post;
+  async updatePost(id: number, userId: number, dto: UpdatePostDto) {
+    const post = await this.findById(id);
+    if (post.user.id !== userId) {
+      throw new ForbiddenException('You can update only your posts');
+    }
+    return this.postsRepo.updatePost(id, dto);
   }
 
-  // Удалить пост
-  removePost(id: string): void {
-    const index = this.posts.findIndex((p) => p.id === id);
-    if (index === -1) throw new NotFoundException('Post not found');
-    this.posts.splice(index, 1);
+  async removePost(id: number, userId: number) {
+    const post = await this.findById(id);
+    if (post.user.id !== userId) {
+      throw new ForbiddenException('You can delete only your posts');
+    }
+    return this.postsRepo.removePost(id);
   }
 }

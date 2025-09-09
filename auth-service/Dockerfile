@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -11,14 +11,14 @@ RUN npm install
 # Копируем весь исходный код
 COPY . .
 
-# Сборка TypeScript в JavaScript
-# ЭТА КОМАНДА ТРЕБУЕТ, ЧТОБЫ В auth-service/package.json БЫЛ СКРИПТ "build"
-# Например: "scripts": { "build": "tsc" }
+# Собираем TypeScript в JavaScript
+# Убедись, что в package.json есть скрипт "build", например: "build": "tsc"
 RUN npm run build
 
-# Открываем порт
-EXPOSE 3001
+# Открываем порт, который слушает приложение ВНУТРИ контейнера
+# ИСПРАВЛЕНО: должно быть 4000, как в docker-compose.yml
+EXPOSE 4000
 
-# Запускаем скомпилированное приложение
-# Убедитесь, что в результате "npm run build" создается /app/dist/index.js
-CMD ["node", "dist/index.js"]
+# Запускаем приложение. Лучше использовать скрипт из package.json для консистентности.
+# Например, в package.json: "start": "node dist/index.js"
+CMD ["npm", "run", "start"]
