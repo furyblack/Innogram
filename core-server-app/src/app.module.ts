@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { CommentsModule } from './modules/comments/comments.module';
 import { UsersModule } from './modules/users/user.module';
 import { PostsModule } from './modules/posts/post.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -32,7 +33,7 @@ import { PostsModule } from './modules/posts/post.module';
         logging: true,
       }),
     }),
-
+    AuthModule,
     UsersModule,
     PostsModule,
     CommentsModule,
