@@ -1,9 +1,14 @@
 import { Request, Response } from "express";
 import { UserService } from "./user.service";
+import { validationResult } from "express-validator";
 
-// Контроллер - связующее звено между HTTP и бизнес-логикой
 export class UserController {
   public static async register(req: Request, res: Response): Promise<void> {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
     try {
       const newUser = await UserService.register(req.body);
       res
@@ -21,5 +26,9 @@ export class UserController {
     } catch (error: any) {
       res.status(401).json({ error: error.message }); // 401 - Unauthorized
     }
+  }
+
+  public static async getMe(req: Request, res: Response): Promise<void> {
+    res.status(200).json({ user: req.user });
   }
 }

@@ -40,7 +40,11 @@ export class UserService {
 
   public static async login(
     loginData: Pick<User, "email" | "password">
-  ): Promise<{ user: Omit<User, "password">; accessToken: string }> {
+  ): Promise<{
+    user: Omit<User, "password">;
+    accessToken: string;
+    refreshToken: string;
+  }> {
     const { email, password } = loginData;
 
     // 1. Ищем пользователя по email в таблице "user"
@@ -59,11 +63,16 @@ export class UserService {
       throw new Error("Invalid credentials.");
     }
 
-    // 3. Создаем JWT токен
     const accessToken = jwt.sign(
       { userId: user.id, email: user.email },
-      process.env.JWT_SECRET || "your-default-secret-key",
-      { expiresIn: "1h" }
+      process.env.JWT_SECRET!, // Используем ! чтобы сказать TS, что переменная точно есть
+      { expiresIn: "15m" } // Короткоживущий токен
+    );
+
+    const refreshToken = jwt.sign(
+      { userId: user.id }, // В refresh токене минимум информации
+      process.env.JWT_REFRESH_SECRET!, // НУЖЕН ОТДЕЛЬНЫЙ СЕКРЕТ!
+      { expiresIn: "7d" } // Долгоживущий токен
     );
 
     // Удаляем хеш пароля из объекта пользователя перед отправкой
@@ -73,6 +82,6 @@ export class UserService {
     user.name = user.username;
     delete user.username;
 
-    return { user, accessToken };
+    return { user, accessToken, refreshToken };
   }
 }

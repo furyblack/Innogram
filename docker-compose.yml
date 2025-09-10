@@ -1,5 +1,3 @@
-
-
 services:
   # -------------------------------------
   # ФРОНТЕНД
@@ -14,89 +12,89 @@ services:
       - core-server-app
 
   # -------------------------------------
-  # ОСНОВНОЙ БЭКЕНД (NestJS)
+  # ОСНОВНОЙ БЭКЕНД (NestJS) - ИСПРАВЛЕНО
   # -------------------------------------
   core-server-app:
     build: ./core-server-app
     container_name: core-server-app
+    command: npm run start:dev
     restart: always
     ports:
       - "3001:3001"
-    # УБИРАЕМ env_file И ЗАДАЕМ ПЕРЕМЕННЫЕ ЯВНО
     environment:
-      # Подключение к PostgreSQL (используем сервис 'postgres')
+      # Все переменные окружения остаются здесь
       DATABASE_HOST: postgres
       DATABASE_PORT: ${DATABASE_PORT}
       DATABASE_USER: ${DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       DATABASE_NAME: ${DATABASE_NAME}
-      
-      # Подключение к MongoDB
       MONGODB_HOST: mongodb
       MONGODB_PORT: 27017
-
-      # Подключение к Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
-
-      # Подключение к RabbitMQ
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: ${RABBITMQ_DEFAULT_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
-
-      # Подключение к MinIO
       MINIO_HOST: minio
       MINIO_PORT: 9000
       MINIO_USER: ${MINIO_ROOT_USER}
       MINIO_PASSWORD: ${MINIO_ROOT_PASSWORD}
-
-      # Подключение к Auth-сервису
       AUTH_SERVICE_HOST: auth-service
-      AUTH_SERVICE_PORT: 4000 # Внутренний порт auth-service
-
-      # Общий секретный ключ для JWT
+      AUTH_SERVICE_PORT: 4000
       JWT_SECRET: ${JWT_SECRET}
+    # ИСПРАВЛЕНО: volumes теперь на правильном уровне
+    volumes:
+      - ./core-server-app:/app
+      - /app/node_modules
     depends_on:
-      - postgres
-      - mongodb
-      - redis
-      - rabbitmq
-      - minio
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      minio:
+        condition: service_started
 
   # -------------------------------------
-  # МИКРОСЕРВИС АУТЕНТИФИКАЦИИ (ExpressJS)
+  # МИКРОСЕРВИС АУТЕНТИФИКАЦИИ (ExpressJS) - ИСПРАВЛЕНО
   # -------------------------------------
   auth-service:
     build: ./auth-service
     container_name: auth-service
+    command: npm run dev
     restart: always
     ports:
       - "3003:4000"
-    # УБИРАЕМ env_file И ЗАДАЕМ ПЕРЕМЕННЫЕ ЯВНО
+      - "9229:9229" # <-- порт для дебага, который мы добавляли
     environment:
-      # Подключение к PostgreSQL
+      # Все переменные окружения остаются здесь
       DATABASE_HOST: postgres
       DATABASE_PORT: ${DATABASE_PORT}
       DATABASE_USER: ${DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       DATABASE_NAME: ${DATABASE_NAME}
-
-      # Подключение к Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
-
-      # Порт, на котором запускается приложение внутри контейнера
-      PORT: 4000 
-      
-      # Общий секретный ключ для JWT
+      PORT: 4000
       JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+    # ИСПРАВЛЕНО: volumes теперь на правильном уровне
+    volumes:
+      - ./auth-service:/app
+      - /app/node_modules
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   # -------------------------------------
-  # БАЗА ДАННЫХ POSTGRESQL
+  # БАЗА ДАННЫХ POSTGRESQL И ОСТАЛЬНЫЕ СЕРВИСЫ
+  # (здесь ничего не меняется, можешь оставить свою часть)
   # -------------------------------------
   postgres:
     image: postgres:15
@@ -110,9 +108,13 @@ services:
       POSTGRES_DB: ${DATABASE_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  # Остальные сервисы (mongodb, redis и т.д.) остаются без изменений...
-  # (Я их скрыл для краткости, твоя конфигурация для них верна)
+    # ДОБАВЛЯЕМ ЭТОТ БЛОК
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  
   mongodb:
     image: mongo:6
     container_name: mongodb_db
@@ -145,11 +147,8 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     command: server /data --console-address ":9001"
     volumes: [ minio_data:/data ]
-    
-  # ... Prometheus и Grafana также остаются без изменений
 
 volumes:
   postgres_data:
   mongodb_data:
   minio_data:
-  grafana_data:

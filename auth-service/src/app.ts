@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("✅ Auth Service is running!");
+  res.send("✅ Auth Service is running! Hot-reload РАБОТАЕТ! 🔥");
 });
 
 app.use("/api/auth", userRoutes);
