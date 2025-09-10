@@ -21,7 +21,6 @@ export class PostsController {
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
-  @HttpPost()
   async create(
     @CurrentUser('userId') userId: number,
     @Body() dto: CreatePostDto,
@@ -40,6 +39,7 @@ export class PostsController {
   }
 
   @Patch(':id')
+  @UseGuards(AuthGuard('jwt'))
   async update(
     @Param('id') id: number,
     @CurrentUser('userId') userId: number,
@@ -49,6 +49,7 @@ export class PostsController {
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
   async remove(@Param('id') id: number, @CurrentUser('userId') userId: number) {
     return this.postsService.removePost(id, userId);
   }
