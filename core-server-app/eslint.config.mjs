@@ -1,35 +1,54 @@
 // @ts-check
+
 import eslint from '@eslint/js';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import prettierPlugin from 'eslint-plugin-prettier';
+import prettierConfig from 'eslint-config-prettier';
+import globals from 'globals';
 
 export default tseslint.config(
+  // Игнорируем сам конфиг
   {
-    ignores: ['eslint.config.mjs'],
+    ignores: ['dist', 'node_modules', 'eslint.config.mjs'],
   },
+
+  // Базовые правила ESLint
   eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
-  eslintPluginPrettierRecommended,
+
+  // Правила для TypeScript
+  ...tseslint.configs.recommended,
+
+  // Конфигурация Prettier. ВАЖНО: prettierConfig должен быть последним в списке "правил",
+  // чтобы он мог отключить конфликтующие правила ESLint.
+  {
+    plugins: {
+      prettier: prettierPlugin,
+    },
+    rules: {
+      ...prettierConfig.rules,
+      'prettier/prettier': 'error', // Включаем правило, которое подсвечивает ошибки Prettier
+    },
+  },
+
+  // Глобальные переменные и настройки парсера для твоего проекта
   {
     languageOptions: {
       globals: {
         ...globals.node,
         ...globals.jest,
       },
-      sourceType: 'commonjs',
       parserOptions: {
-        projectService: true,
+        project: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
   },
+  
+  // Твои персональные правила
   {
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
       '@typescript-eslint/no-unused-vars': 'off',
     },
-  },
+  }
 );

@@ -1,19 +1,28 @@
+// --- Свежая версия файла LikesController ---
+
 import {
   Controller,
-  Post,
   Delete,
   Param,
-  UseGuards,
   ParseIntPipe,
+  Post,
+  UseGuards,
 } from '@nestjs/common';
-import { LikesService } from '../application/likes.service';
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from 'src/modules/users/decorators/current-user';
+import { LikesService } from '../application/likes.service';
 
-@Controller('posts/:postId/likes') // Все операции с лайками будут по этому адресу
+/**
+ * Контроллер для управления лайками постов.
+ * Адресация: /posts/:postId/likes
+ */
+@Controller('posts/:postId/likes')
 export class LikesController {
   constructor(private readonly likesService: LikesService) {}
 
+  /**
+   * Поставить лайк посту.
+   */
   @Post()
   @UseGuards(AuthGuard('jwt'))
   async likePost(
@@ -23,6 +32,9 @@ export class LikesController {
     return this.likesService.likePost(userId, postId);
   }
 
+  /**
+   * Убрать лайк с поста.
+   */
   @Delete()
   @UseGuards(AuthGuard('jwt'))
   async unlikePost(
