@@ -1,5 +1,6 @@
 import { User } from 'src/modules/users/domain/user.entity';
 import { Comment } from 'src/modules/comments/domain/comments.entity';
+import { Like } from 'src/modules/likes/domain/likes.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -36,4 +37,7 @@ export class Post {
 
   @OneToMany(() => Comment, (comment) => comment.post)
   comments: Comment[];
+
+  @OneToMany(() => Like, (like) => like.post)
+  likes: Like[];
 }

@@ -7,6 +7,7 @@ import { CommentsModule } from './modules/comments/comments.module';
 import { UsersModule } from './modules/users/user.module';
 import { PostsModule } from './modules/posts/post.module';
 import { AuthModule } from './auth/auth.module';
+import { LikesModule } from './modules/likes/likes.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { AuthModule } from './auth/auth.module';
     AuthModule,
     UsersModule,
     PostsModule,
+    LikesModule,
     CommentsModule,
   ],
   controllers: [AppController],

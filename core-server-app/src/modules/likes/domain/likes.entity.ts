@@ -1,22 +1,17 @@
+import { Entity, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 import { User } from 'src/modules/users/domain/user.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Post } from 'src/modules/posts/domain/post.entity';
 
-export enum LikeEntityType {
-  POST = 'post',
-  COMMENT = 'comment',
-}
-
-@Entity()
+@Entity({ name: 'likes' }) // Явно указываем имя таблицы
 export class Like {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'int' })
-  entity_id: number;
-
-  @Column({ type: 'enum', enum: LikeEntityType })
-  entity_type: LikeEntityType;
-
-  @ManyToOne(() => User, (user) => user.likes)
+  // Связь: Многие лайки могут принадлежать одному пользователю
+  @ManyToOne(() => User, (user) => user.likes, { onDelete: 'CASCADE' })
   user: User;
+
+  // Связь: Многие лайки могут принадлежать одному посту
+  @ManyToOne(() => Post, (post) => post.likes, { onDelete: 'CASCADE' })
+  post: Post;
 }

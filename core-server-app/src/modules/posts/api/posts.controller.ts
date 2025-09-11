@@ -8,6 +8,7 @@ import {
   Post as HttpPost,
   Post,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { PostsService } from '../application/posts.service';
 import { CreatePostDto } from '../dto/create-post.dto';
@@ -34,14 +35,14 @@ export class PostsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number) {
+  async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.postsService.findById(id);
   }
 
   @Patch(':id')
   @UseGuards(AuthGuard('jwt'))
   async update(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser('userId') userId: number,
     @Body() dto: UpdatePostDto,
   ) {
