@@ -8,9 +8,11 @@ import {
   Body,
   UseGuards,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 
 import { AuthGuard } from '@nestjs/passport';
+import { PaginationDto } from 'src/common/pagination.dto';
 import { CommentsService } from 'src/modules/comments/application/comments.service';
 import { CreateCommentDto } from 'src/modules/comments/dto/create-comment.dto';
 import { UpdateCommentDto } from 'src/modules/comments/dto/update-comment.dto';
@@ -37,8 +39,11 @@ export class CommentsController {
 
   @Get()
   // ПУБЛИЧНО: Любой может читать комментарии к посту
-  getCommentsByPost(@Param('postId', ParseIntPipe) postId: number) {
-    return this.commentsService.getCommentsByPost(postId);
+  getCommentsByPost(
+    @Param('postId', ParseIntPipe) postId: number,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.commentsService.getCommentsByPost(postId, paginationDto);
   }
 }
 

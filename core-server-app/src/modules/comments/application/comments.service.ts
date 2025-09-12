@@ -10,6 +10,7 @@ import { UsersRepository } from 'src/modules/users/infrastructure/users.reposito
 import { CreateCommentDto } from '../dto/create-comment.dto';
 import { UpdateCommentDto } from '../dto/update-comment.dto';
 import { Comment } from '../domain/comments.entity';
+import { PaginationDto } from 'src/common/pagination.dto';
 
 @Injectable()
 export class CommentsService {
@@ -40,8 +41,11 @@ export class CommentsService {
     });
   }
 
-  async getCommentsByPost(postId: number): Promise<Comment[]> {
-    return this.commentsRepo.findByPost(postId);
+  async getCommentsByPost(
+    postId: number,
+    paginationDto: PaginationDto,
+  ): Promise<Comment[]> {
+    return this.commentsRepo.findByPost(postId, paginationDto);
   }
 
   async updateComment(

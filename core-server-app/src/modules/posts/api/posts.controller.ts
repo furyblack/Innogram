@@ -9,12 +9,14 @@ import {
   Post,
   UseGuards,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { PostsService } from '../application/posts.service';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { UpdatePostDto } from '../dto/update-post.dto';
 import { CurrentUser } from 'src/modules/users/decorators/current-user';
 import { AuthGuard } from '@nestjs/passport';
+import { PaginationDto } from 'src/common/pagination.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -30,8 +32,8 @@ export class PostsController {
   }
 
   @Get()
-  async findAll() {
-    return this.postsService.findAll();
+  async findAll(@Query() paginationDto: PaginationDto) {
+    return this.postsService.findAll(paginationDto);
   }
 
   @Get(':id')

@@ -4,6 +4,7 @@ import { User } from '../domain/user.entity';
 import { CreateUserDto } from '../dto/create-user-dto';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from '../dto/update-user-dto';
+import { PaginationDto } from 'src/common/pagination.dto';
 
 @Injectable()
 export class UsersService {
@@ -19,8 +20,8 @@ export class UsersService {
     });
   }
 
-  async getUsers(): Promise<User[]> {
-    return this.usersRepo.findAll();
+  async getUsers(paginationDto: PaginationDto): Promise<User[]> {
+    return this.usersRepo.findAll(paginationDto);
   }
 
   async getUserById(id: number): Promise<User> {

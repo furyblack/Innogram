@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { User } from 'src/modules/users/domain/user.entity';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { UpdatePostDto } from '../dto/update-post.dto';
+import { PaginationDto } from 'src/common/pagination.dto';
 
 @Injectable()
 export class PostsRepository {
@@ -27,8 +28,15 @@ export class PostsRepository {
     return this.postRepo.save(newPost);
   }
 
-  async findAll() {
-    return this.postRepo.find({ relations: ['user', 'comments'] });
+  async findAll(paginationDto: PaginationDto) {
+    const { page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+    return this.postRepo.find({
+      relations: ['user', 'comments'],
+      skip: skip, // <-- Пропустить N записей
+      take: limit, // <-- Взять M записей
+      order: { created_at: 'DESC' }, // Сортируем по дате создания
+    });
   }
 
   async findById(id: number) {

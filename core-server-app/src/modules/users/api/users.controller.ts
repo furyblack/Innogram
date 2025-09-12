@@ -7,11 +7,13 @@ import {
   Body,
   UseGuards,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from '../application/users.service';
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from '../decorators/current-user'; // Убедись, что путь к декоратору верный
 import { UpdateUserDto } from '../dto/update-user-dto';
+import { PaginationDto } from 'src/common/pagination.dto';
 
 /**
  * Публичный контроллер для получения информации о пользователях.
@@ -23,8 +25,8 @@ export class UsersController {
 
   @Get()
   // ПУБЛИЧНО: Получить список всех пользователей (например, для поиска)
-  getAllUsers() {
-    return this.usersService.getUsers(); // Метод должен возвращать только публичные данные
+  getAllUsers(@Query() paginationDto: PaginationDto) {
+    return this.usersService.getUsers(paginationDto); // Метод должен возвращать только публичные данные
   }
 
   @Get(':id')

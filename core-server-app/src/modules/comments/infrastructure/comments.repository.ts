@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Comment } from '../domain/comments.entity';
+import { PaginationDto } from 'src/common/pagination.dto';
 
 @Injectable()
 export class CommentsRepository {
@@ -22,11 +23,19 @@ export class CommentsRepository {
     });
   }
 
-  async findByPost(postId: number): Promise<Comment[]> {
+  async findByPost(
+    postId: number,
+    paginationDto: PaginationDto,
+  ): Promise<Comment[]> {
+    const { page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
     return await this.repo.find({
       where: { post: { id: postId } },
       relations: ['user'],
       order: { created_at: 'DESC' },
+      skip: skip,
+      take: limit,
     });
   }
 

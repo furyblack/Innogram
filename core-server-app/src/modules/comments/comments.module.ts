@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { CommentsRepository } from './infrastructure/comments.repository';
-import { CommentsController } from './api/comments.controller';
+import {
+  CommentActionsController,
+  CommentsController,
+} from './api/comments.controller';
 import { CommentsService } from './application/comments.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/domain/user.entity';
@@ -15,7 +18,7 @@ import { UsersModule } from '../users/user.module';
     PostsModule,
     UsersModule,
   ],
-  controllers: [CommentsController],
+  controllers: [CommentsController, CommentActionsController],
   providers: [CommentsService, CommentsRepository],
   exports: [CommentsRepository],
 })

@@ -1,3 +1,4 @@
+import { PaginationDto } from './../../../common/pagination.dto';
 import {
   Injectable,
   NotFoundException,
@@ -15,8 +16,8 @@ export class PostsService {
     return this.postsRepo.createPost(userId, dto);
   }
 
-  async findAll() {
-    return this.postsRepo.findAll();
+  async findAll(paginationDto: PaginationDto) {
+    return this.postsRepo.findAll(paginationDto);
   }
 
   async findById(id: number) {
