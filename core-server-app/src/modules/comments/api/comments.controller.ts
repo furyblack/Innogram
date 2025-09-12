@@ -2,48 +2,71 @@ import {
   Controller,
   Get,
   Post,
-  Put,
+  Patch,
   Delete,
   Param,
   Body,
+  UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
-import { CommentsService } from '../application/comments.service';
-import { CreateCommentDto } from '../dto/create-comment.dto';
-import { UpdateCommentDto } from '../dto/update-comment.dto';
 
-@Controller('comments')
+import { AuthGuard } from '@nestjs/passport';
+import { CommentsService } from 'src/modules/comments/application/comments.service';
+import { CreateCommentDto } from 'src/modules/comments/dto/create-comment.dto';
+import { UpdateCommentDto } from 'src/modules/comments/dto/update-comment.dto';
+import { CurrentUser } from 'src/modules/users/decorators/current-user';
+
+/**
+ * Этот контроллер отвечает за действия, которые происходят
+ * В КОНТЕКСТЕ ПОСТА (создание и получение списка).
+ * Маршрут: /posts/:postId/comments
+ */
+@Controller('posts/:postId/comments')
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   @Post()
-  createComment(@Body() dto: CreateCommentDto) {
-    // ⚡️ Тут тебе нужно будет пробросить userId и postId (например, через декораторы или передав в body)
-    return this.commentsService.createComment(
-      { id: 1 } as any,
-      { id: 1 } as any,
-      dto,
-    );
+  @UseGuards(AuthGuard('jwt')) // ЗАЩИЩЕНО: Только авторизованный пользователь может комментировать
+  createComment(
+    @CurrentUser('userId') userId: number, // Получаем ID пользователя из токена
+    @Param('postId', ParseIntPipe) postId: number, // Получаем ID поста из URL
+    @Body() dto: CreateCommentDto,
+  ) {
+    return this.commentsService.createComment(postId, userId, dto);
   }
 
   @Get()
-  getAllComments() {
-    return this.commentsService.getAllComments();
+  // ПУБЛИЧНО: Любой может читать комментарии к посту
+  getCommentsByPost(@Param('postId', ParseIntPipe) postId: number) {
+    return this.commentsService.getCommentsByPost(postId);
   }
+}
 
-  @Get(':id')
-  getComment(@Param('id') id: string) {
-    return this.commentsService.getCommentById(+id);
-  }
+/**
+ * Этот контроллер отвечает за действия, которые касаются
+ * КОНКРЕТНОГО КОММЕНТАРИЯ по его ID (обновление и удаление).
+ * Маршрут: /comments/:id
+ */
+@Controller('comments')
+export class CommentActionsController {
+  constructor(private readonly commentsService: CommentsService) {}
 
-  @Put(':id')
-  updateComment(@Param('id') id: string, @Body() dto: UpdateCommentDto) {
-    // ⚡️ userId нужно будет взять из JWT
-    return this.commentsService.updateComment(+id, 1, dto);
+  @Patch(':id')
+  @UseGuards(AuthGuard('jwt')) // ЗАЩИЩЕНО: Только автор может редактировать
+  updateComment(
+    @CurrentUser('userId') userId: number, // Получаем ID пользователя из токена
+    @Param('id', ParseIntPipe) id: number, // Получаем ID комментария из URL
+    @Body() dto: UpdateCommentDto,
+  ) {
+    return this.commentsService.updateComment(id, userId, dto);
   }
 
   @Delete(':id')
-  deleteComment(@Param('id') id: string) {
-    // ⚡️ userId тоже из JWT
-    return this.commentsService.deleteComment(+id, 1);
+  @UseGuards(AuthGuard('jwt')) // ЗАЩИЩЕНО: Только автор может удалять
+  deleteComment(
+    @CurrentUser('userId') userId: number, // Получаем ID пользователя из токена
+    @Param('id', ParseIntPipe) id: number, // Получаем ID комментария из URL
+  ) {
+    return this.commentsService.deleteComment(id, userId);
   }
 }

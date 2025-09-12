@@ -15,13 +15,6 @@ export class CommentsRepository {
     return await this.repo.save(comment);
   }
 
-  async findAll(): Promise<Comment[]> {
-    return await this.repo.find({
-      relations: ['user', 'post'],
-      order: { created_at: 'DESC' },
-    });
-  }
-
   async findById(id: number): Promise<Comment | null> {
     return await this.repo.findOne({
       where: { id },
