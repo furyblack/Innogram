@@ -1,0 +1,75 @@
+# Название рабочего процесса, которое будет отображаться в GitHub Actions
+name: CI Pipeline
+
+# Триггеры для запуска: push и pull request в ветку main
+on:
+    push:
+        branches: ['main']
+    pull_request:
+        branches: ['main']
+
+# Задачи (jobs), которые будут выполняться
+jobs:
+    # Название задачи
+    build-and-test:
+        # Используем последнюю версию Ubuntu для выполнения задачи
+        runs-on: ubuntu-latest
+
+        # Шаги (steps), из которых состоит задача
+        steps:
+            # 1. Клонируем репозиторий в окружение GitHub Actions
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            # 2. Настраиваем Node.js нужной версии (например, 20)
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  # Используем кэш для ускорения установки зависимостей
+                  cache: 'npm'
+
+            # 3. Устанавливаем все зависимости проекта
+            - name: Install dependencies
+              run: npm install
+
+            # 4. Запускаем линтер для проверки качества кода во всем монорепозитории
+            - name: Run ESLint
+              run: npm run lint
+
+            # 5. Запускаем сборку всех приложений и пакетов в монорепозитории
+            - name: Build projects
+              run: npm run build
+
+            # 6. Настраиваем Docker Buildx для возможности сборки образов
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            # 7. Собираем Docker-образ для фронтенда (client-app)
+            # Этот шаг только собирает образ, но не публикует его.
+            # Этого достаточно для проверки, что Dockerfile написан корректно.
+            - name: Build client-app Docker image
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./client-app # Путь к сервису
+                  file: ./client-app/Dockerfile # Путь к Dockerfile
+                  push: false # Не отправляем образ в репозиторий
+                  tags: local/client-app:latest
+
+            # 8. Собираем Docker-образ для основного бэкенда (core-server-app)
+            - name: Build core-server-app Docker image
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./core-server-app # Путь к сервису
+                  file: ./core-server-app/Dockerfile # Путь к Dockerfile
+                  push: false # Не отправляем образ в репозиторий
+                  tags: local/core-server-app:latest
+
+            # 9. Собираем Docker-образ для сервиса аутентификации (auth-service)
+            - name: Build auth-service Docker image
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./auth-service # Путь к сервису
+                  file: ./auth-service/Dockerfile # Путь к Dockerfile
+                  push: false # Не отправляем образ в репозиторий
+                  tags: local/auth-service:latest
