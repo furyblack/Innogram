@@ -34,12 +34,14 @@ jobs:
               run: npm install
 
             # 4. Запускаем линтер для проверки качества кода во всем монорепозитории
+            # Прямой вызов 'turbo lint' более надежен для CI в Turborepo
             - name: Run ESLint
-              run: npm run lint
+              run: npx turbo lint
 
             # 5. Запускаем сборку всех приложений и пакетов в монорепозитории
+            # Прямой вызов 'turbo build'
             - name: Build projects
-              run: npm run build
+              run: npx turbo build
 
             # 6. Настраиваем Docker Buildx для возможности сборки образов
             - name: Set up Docker Buildx
