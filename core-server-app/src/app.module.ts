@@ -8,6 +8,7 @@ import { UsersModule } from './modules/users/user.module';
 import { PostsModule } from './modules/posts/post.module';
 import { AuthModule } from './auth/auth.module';
 import { LikesModule } from './modules/likes/likes.module';
+import { NotificationsModule } from './modules/notifications/notification.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { LikesModule } from './modules/likes/likes.module';
     PostsModule,
     LikesModule,
     CommentsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

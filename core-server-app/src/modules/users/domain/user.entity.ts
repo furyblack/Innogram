@@ -45,7 +45,7 @@ export class User {
   @OneToMany(() => Message, (message) => message.receiver)
   receivedMessages: Message[];
 
-  @OneToMany(() => Notification, (notification) => notification.user)
+  @OneToMany(() => Notification, (notification) => notification.recipient)
   notifications: Notification[];
 
   @OneToMany(() => Follow, (follow) => follow.followingUser)
