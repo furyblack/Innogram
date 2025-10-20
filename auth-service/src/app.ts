@@ -1,26 +1,36 @@
-import express, { Request, Response } from "express";
-import cors from "cors"; // 👈 1. Импортируй cors
-import { errorHandler } from "./middleware/error.middleware";
-import userRoutes from "./users/user.routes";
+// auth-service/src/app.ts
+import express, { Request, Response } from 'express';
+import cors from 'cors';
+import passport from 'passport';
+import { GoogleStrategy } from './strategies/google-strategy'; // Use correct filename
+import { errorHandler } from './middleware/error.middleware';
+import userRoutes from './users/user.routes';
 
 const app = express();
 
-// 👇 2. Настрой cors СРАЗУ ПОСЛЕ express.json() и ПЕРЕД твоими роутами
+// Enable CORS
 app.use(
-  cors({
-    origin: "http://localhost:1024", // Разрешаем запросы только с этого адреса
-  })
+    cors({
+        origin: 'http://localhost:1024',
+    })
 );
 
+// Parse JSON bodies
 app.use(express.json());
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("✅ Auth Service is running! Hot-reload РАБОТАЕТ! 🔥");
+// Initialize Passport
+app.use(passport.initialize());
+passport.use(GoogleStrategy); // Register the strategy instance
+
+// Simple root route
+app.get('/', (req: Request, res: Response) => {
+    res.send('✅ Auth Service is running!');
 });
 
-app.use("/api/auth", userRoutes);
+// Mount user/auth routes
+app.use('/api/auth', userRoutes);
 
-//глобальный обработчик ошибок
+// Global error handler (must be last)
 app.use(errorHandler);
 
 export default app;

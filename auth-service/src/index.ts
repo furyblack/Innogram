@@ -1,6 +1,6 @@
-import * as dotenv from "dotenv";
-import app from "./app";
-import { checkDbConnection } from "./db"; // <-- Импортируем нашу проверку
+import * as dotenv from 'dotenv';
+import app from './app';
+import { checkDbConnection } from './db'; // <-- Импортируем нашу проверку
 
 // Просто вызываем config() один раз. Этого достаточно.
 dotenv.config();
@@ -10,20 +10,20 @@ dotenv.config();
 const PORT = process.env.PORT || 4000;
 
 async function bootstrap() {
-  try {
-    // 1. Проверяем подключение к PostgreSQL
-    await checkDbConnection();
+    try {
+        // 1. Проверяем подключение к PostgreSQL
+        await checkDbConnection();
 
-    // 2. Если все хорошо, запускаем Express-сервер
-    app.listen(PORT, () => {
-      console.log(`🚀 Auth Service running on port ${PORT}`);
-    });
-  } catch (err) {
-    // Ошибка уже будет обработана в checkDbConnection,
-    // но на всякий случай оставим общий catch
-    console.error("❌ Failed to start server:", err);
-    process.exit(1);
-  }
+        // 2. Если все хорошо, запускаем Express-сервер
+        app.listen(PORT, () => {
+            console.log(`🚀 Auth Service running on port ${PORT}`);
+        });
+    } catch (err) {
+        // Ошибка уже будет обработана в checkDbConnection,
+        // но на всякий случай оставим общий catch
+        console.error('❌ Failed to start server:', err);
+        process.exit(1);
+    }
 }
 
 bootstrap();
