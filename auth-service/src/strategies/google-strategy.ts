@@ -1,4 +1,3 @@
-// auth-service/src/strategies/google-strategy.ts
 import { Strategy, Profile, VerifyCallback } from 'passport-google-oauth20';
 import { config } from 'dotenv';
 import pool from '../db';
