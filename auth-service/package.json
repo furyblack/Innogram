@@ -4,11 +4,7 @@
     "description": "",
     "main": "dist/index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "lint": "echo 'lint script for auth-service not implemented yet'",
-        "dev": "ts-node-dev --poll --respawn --transpile-only src/index.ts",
-        "build": "tsc",
-        "start": "node dist/index.js"
+        "dev": "ts-node-dev --inspect=9230 --poll --respawn --transpile-only src/index.ts"
     },
     "keywords": [],
     "author": "",
@@ -23,7 +19,9 @@
         "jsonwebtoken": "^9.0.2",
         "passport": "^0.7.0",
         "passport-google-oauth20": "^2.0.0",
-        "pg": "^8.16.3"
+        "pg": "^8.16.3",
+        "redid": "^0.0.0",
+        "redis": "^5.9.0"
     },
     "devDependencies": {
         "@types/bcrypt": "^6.0.0",

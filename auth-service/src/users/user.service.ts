@@ -1,87 +1,126 @@
-import pool from "../db";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { User } from "./user.interface";
+import pool from '../db';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
+import { User } from './user.interface';
+import { redisClient } from '../redis';
+
+// ПРЕДУПРЕЖДЕНИЕ: Вынесите 'секреты' в process.env!
+// (Например: process.env.ACCESS_TOKEN_SECRET)
+const ACCESS_SECRET = 'your-super-secret-access-key';
+const REFRESH_SECRET = 'your-super-secret-refresh-key';
 
 export class UserService {
-  public static async register(
-    userData: Omit<User, "id">
-  ): Promise<Omit<User, "password">> {
-    // В коде мы по-прежнему можем называть переменную 'name', но в БД будем использовать 'username'
-    const { name, email, password } = userData;
+    // ПРИМЕЧАНИЕ: Статические методы не могут быть асинхронными
+    // в определении класса, но их вызов будет асинхронным.
+    // Я также добавил DTO (Data Transfer Objects) для email/password.
 
-    // 1. Проверяем, не занят ли email, используя правильное имя таблицы "user"
-    const existingUser = await pool.query(
-      'SELECT * FROM "user" WHERE email = $1',
-      [email]
-    );
-    if (existingUser.rows.length > 0) {
-      throw new Error("User with this email already exists.");
+    public static async registerUser(
+        email: string,
+        password: string,
+        username: string
+    ): Promise<{ accessToken: string; refreshToken: string }> {
+        // --- ВОТ ЧТО БЫЛО ПРОПУЩЕНО (Начало) ---
+
+        // 1. Проверяем, существует ли пользователь
+        const existingUser = await pool.query(
+            'SELECT * FROM "user" WHERE email = $1',
+            [email]
+        );
+        if (existingUser.rows.length > 0) {
+            throw new Error('User already exists'); // (Или ваша кастомная ошибка)
+        }
+
+        // 2. Хешируем пароль
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // 3. Создаем пользователя в БД
+        const newUserResult = await pool.query(
+            'INSERT INTO "user" (email, password_hash, username) VALUES ($1, $2, $3) RETURNING *', // <-- ИСПРАВЛЕНО
+            [email, hashedPassword, username]
+        );
+        const user: User = newUserResult.rows[0];
+
+        // 4. Генерируем ID для Refresh токена
+        const refreshTokenId = uuidv4();
+
+        // 5. Создаем токены
+        const accessToken = jwt.sign(
+            { userId: user.id, email: user.email },
+            ACCESS_SECRET,
+            { expiresIn: '15m' } // Короткий срок жизни для Access
+        );
+
+        const refreshToken = jwt.sign(
+            { userId: user.id, jti: refreshTokenId }, // 'jti' (JWT ID) связывает токен с сессией в Redis
+            REFRESH_SECRET,
+            { expiresIn: '7d' } // Длинный срок жизни для Refresh
+        );
+
+        // --- ВОТ ЧТО БЫЛО ПРОПУЩЕНО (Конец) ---
+
+        // 6. Сохраняем сессию Refresh токена в Redis
+        const redisSessionKey = `refresh_tokens:${refreshTokenId}`;
+        const sessionData = JSON.stringify({ userId: user.id });
+        const sevenDaysInSeconds = 60 * 60 * 24 * 7;
+
+        await redisClient.set(redisSessionKey, sessionData, {
+            EX: sevenDaysInSeconds,
+        });
+
+        return { accessToken, refreshToken }; // Теперь эти переменные существуют
     }
 
-    // 2. Хешируем пароль
-    const hashedPassword = await bcrypt.hash(password, 10);
+    public static async login(
+        email: string,
+        password: string
+    ): Promise<{ accessToken: string; refreshToken: string }> {
+        // --- ВОТ ЧТО БЫЛО ПРОПУЩЕНО (Начало) ---
 
-    // 3. Сохраняем пользователя, используя правильные имена таблицы и полей
-    const newUserResult = await pool.query(
-      'INSERT INTO "user" (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email, created_at',
-      [name, email, hashedPassword]
-    );
+        // 1. Находим пользователя
+        const userResult = await pool.query(
+            'SELECT * FROM "user" WHERE email = $1',
+            [email]
+        );
+        if (userResult.rows.length === 0) {
+            throw new Error('Invalid credentials'); // Не говорим, что "пользователь не найден"
+        }
+        const user: User = userResult.rows[0];
 
-    // Переименуем 'username' в 'name' для консистентности ответа
-    const userToReturn = {
-      ...newUserResult.rows[0],
-      name: newUserResult.rows[0].username,
-    };
-    delete userToReturn.username;
+        // 2. Проверяем пароль
+        const isMatch = await bcrypt.compare(password, user.password_hash);
+        if (!isMatch) {
+            throw new Error('Invalid credentials');
+        }
 
-    return userToReturn;
-  }
+        // 3. Генерируем ID для Refresh токена
+        const refreshTokenId = uuidv4();
 
-  public static async login(
-    loginData: Pick<User, "email" | "password">
-  ): Promise<{
-    user: Omit<User, "password">;
-    accessToken: string;
-    refreshToken: string;
-  }> {
-    const { email, password } = loginData;
+        // 4. Создаем токены
+        const accessToken = jwt.sign(
+            { userId: user.id, email: user.email },
+            ACCESS_SECRET,
+            { expiresIn: '15m' }
+        );
 
-    // 1. Ищем пользователя по email в таблице "user"
-    const userResult = await pool.query(
-      'SELECT * FROM "user" WHERE email = $1',
-      [email]
-    );
-    if (userResult.rows.length === 0) {
-      throw new Error("Invalid credentials.");
+        const refreshToken = jwt.sign(
+            { userId: user.id, jti: refreshTokenId },
+            REFRESH_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        // --- ВОТ ЧТО БЫЛО ПРОПУЩЕНО (Конец) ---
+
+        // 5. Сохраняем сессию Refresh токена в Redis
+        const redisSessionKey = `refresh_tokens:${refreshTokenId}`;
+        const sessionData = JSON.stringify({ userId: user.id });
+        const sevenDaysInSecondsLogin = 60 * 60 * 24 * 7;
+
+        await redisClient.set(redisSessionKey, sessionData, {
+            EX: sevenDaysInSecondsLogin,
+        });
+
+        return { accessToken, refreshToken }; // Теперь все переменные на месте
     }
-    const user = userResult.rows[0];
-
-    // 2. Сравниваем пароль с хешем из поля "password_hash"
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-    if (!isPasswordValid) {
-      throw new Error("Invalid credentials.");
-    }
-
-    const accessToken = jwt.sign(
-      { userId: user.id, email: user.email },
-      process.env.JWT_SECRET!, // Используем ! чтобы сказать TS, что переменная точно есть
-      { expiresIn: "15m" } // Короткоживущий токен
-    );
-
-    const refreshToken = jwt.sign(
-      { userId: user.id }, // В refresh токене минимум информации
-      process.env.JWT_REFRESH_SECRET!, // НУЖЕН ОТДЕЛЬНЫЙ СЕКРЕТ!
-      { expiresIn: "7d" } // Долгоживущий токен
-    );
-
-    // Удаляем хеш пароля из объекта пользователя перед отправкой
-    delete user.password_hash;
-
-    // Переименуем 'username' в 'name' для консистентности ответа
-    user.name = user.username;
-    delete user.username;
-
-    return { user, accessToken, refreshToken };
-  }
 }

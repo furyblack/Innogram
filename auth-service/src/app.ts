@@ -1,4 +1,3 @@
-// auth-service/src/app.ts
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import passport from 'passport';

@@ -1,154 +1,156 @@
 services:
-  # -------------------------------------
-  # ФРОНТЕНД
-  # -------------------------------------
-  client-app:
-    build: ./client-app
-    container_name: client-app
-    restart: always
-    ports:
-      - "1024:3000"
-    depends_on:
-      - core-server-app
+    # -------------------------------------
+    # ФРОНТЕНД
+    # -------------------------------------
+    client-app:
+        build: ./client-app
+        container_name: client-app
+        restart: always
+        ports:
+            - '1024:3000'
+        depends_on:
+            - core-server-app
 
-  # -------------------------------------
-  # ОСНОВНОЙ БЭКЕНД (NestJS) - ИСПРАВЛЕНО
-  # -------------------------------------
-  core-server-app:
-    build: ./core-server-app
-    container_name: core-server-app
-    command: npm run start:dev
-    restart: always
-    ports:
-      - "3001:3001"
-    environment:
-      # Все переменные окружения остаются здесь
-      DATABASE_HOST: postgres
-      DATABASE_PORT: ${DATABASE_PORT}
-      DATABASE_USER: ${DATABASE_USER}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      DATABASE_NAME: ${DATABASE_NAME}
-      MONGODB_HOST: mongodb
-      MONGODB_PORT: 27017
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${RABBITMQ_DEFAULT_USER}
-      RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
-      MINIO_HOST: minio
-      MINIO_PORT: 9000
-      MINIO_USER: ${MINIO_ROOT_USER}
-      MINIO_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      AUTH_SERVICE_HOST: auth-service
-      AUTH_SERVICE_PORT: 4000
-      JWT_SECRET: ${JWT_SECRET}
-    # ИСПРАВЛЕНО: volumes теперь на правильном уровне
-    volumes:
-      - ./core-server-app:/app
-      - /app/node_modules
-    depends_on:
-      postgres:
-        condition: service_healthy
-      mongodb:
-        condition: service_started
-      redis:
-        condition: service_started
-      rabbitmq:
-        condition: service_started
-      minio:
-        condition: service_started
+    # -------------------------------------
+    # ОСНОВНОЙ БЭКЕНД (NestJS) - ИСПРАВЛЕНО
+    # -------------------------------------
+    core-server-app:
+        build: ./core-server-app
+        container_name: core-server-app
+        command: npm run start:dev
+        restart: always
+        ports:
+            - '3001:3000'
+        environment:
+            # Все переменные окружения остаются здесь
+            DATABASE_HOST: postgres
+            DATABASE_PORT: ${DATABASE_PORT}
+            DATABASE_USER: ${DATABASE_USER}
+            DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+            DATABASE_NAME: ${DATABASE_NAME}
+            MONGODB_HOST: mongodb
+            MONGODB_PORT: 27017
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            RABBITMQ_HOST: rabbitmq
+            RABBITMQ_PORT: 5672
+            RABBITMQ_USER: ${RABBITMQ_DEFAULT_USER}
+            RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
+            MINIO_HOST: minio
+            MINIO_PORT: 9000
+            MINIO_USER: ${MINIO_ROOT_USER}
+            MINIO_PASSWORD: ${MINIO_ROOT_PASSWORD}
+            AUTH_SERVICE_HOST: auth-service
+            AUTH_SERVICE_PORT: 4000
+            JWT_SECRET: ${JWT_SECRET}
+        # ИСПРАВЛЕНО: volumes теперь на правильном уровне
+        volumes:
+            - ./core-server-app:/app
+            - /app/node_modules
+        depends_on:
+            postgres:
+                condition: service_healthy
+            mongodb:
+                condition: service_started
+            redis:
+                condition: service_started
+            rabbitmq:
+                condition: service_started
+            minio:
+                condition: service_started
 
-  # -------------------------------------
-  # МИКРОСЕРВИС АУТЕНТИФИКАЦИИ (ExpressJS) - ИСПРАВЛЕНО
-  # -------------------------------------
-  auth-service:
-    build: ./auth-service
-    container_name: auth-service
-    command: npm run dev
-    restart: always
-    ports:
-      - "3003:4000"
-      - "9229:9229" # <-- порт для дебага, который мы добавляли
-    environment:
-      # Все переменные окружения остаются здесь
-      DATABASE_HOST: postgres
-      DATABASE_PORT: ${DATABASE_PORT}
-      DATABASE_USER: ${DATABASE_USER}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      DATABASE_NAME: ${DATABASE_NAME}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      PORT: 4000
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-    # ИСПРАВЛЕНО: volumes теперь на правильном уровне
-    volumes:
-      - ./auth-service:/app
-      - /app/node_modules
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
+    # -------------------------------------
+    # МИКРОСЕРВИС АУТЕНТИФИКАЦИИ (ExpressJS) - ИСПРАВЛЕНО
+    # -------------------------------------
+    auth-service:
+        build: ./auth-service
+        container_name: auth-service
+        command: npm run dev
+        restart: always
 
-  # -------------------------------------
-  # БАЗА ДАННЫХ POSTGRESQL И ОСТАЛЬНЫЕ СЕРВИСЫ
-  # (здесь ничего не меняется, можешь оставить свою часть)
-  # -------------------------------------
-  postgres:
-    image: postgres:15
-    container_name: postgres_db
-    restart: always
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: ${DATABASE_USER}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: ${DATABASE_NAME}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    # ДОБАВЛЯЕМ ЭТОТ БЛОК
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-  
-  mongodb:
-    image: mongo:6
-    container_name: mongodb_db
-    restart: always
-    ports: [ "27017:27017" ]
-    volumes: [ mongodb_data:/data/db ]
+        environment:
+            # Все переменные окружения остаются здесь
+            DATABASE_HOST: postgres
+            DATABASE_PORT: ${DATABASE_PORT}
+            DATABASE_USER: ${DATABASE_USER}
+            DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+            DATABASE_NAME: ${DATABASE_NAME}
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            PORT: 4000
+            JWT_SECRET: ${JWT_SECRET}
+            JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+        # ИСПРАВЛЕНО: volumes теперь на правильном уровне
+        volumes:
+            - ./auth-service:/app
+            - /app/node_modules
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_started
 
-  redis:
-    image: redis:7
-    container_name: redis_cache
-    restart: always
-    ports: [ "6379:6379" ]
+    # -------------------------------------
+    # БАЗА ДАННЫХ POSTGRESQL И ОСТАЛЬНЫЕ СЕРВИСЫ
+    # (здесь ничего не меняется, можешь оставить свою часть)
+    # -------------------------------------
+    postgres:
+        image: postgres:15
+        container_name: postgres_db
+        restart: always
+        ports:
+            - '5432:5432'
+        environment:
+            POSTGRES_USER: ${DATABASE_USER}
+            POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+            POSTGRES_DB: ${DATABASE_NAME}
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        # ДОБАВЛЯЕМ ЭТОТ БЛОК
+        healthcheck:
+            test:
+                [
+                    'CMD-SHELL',
+                    'pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}',
+                ]
+            interval: 5s
+            timeout: 5s
+            retries: 5
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq_broker
-    restart: always
-    ports: [ "5672:5672", "15672:15672" ]
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    mongodb:
+        image: mongo:6
+        container_name: mongodb_db
+        restart: always
+        ports: ['27017:27017']
+        volumes: [mongodb_data:/data/db]
 
-  minio:
-    image: minio/minio
-    container_name: minio_storage
-    restart: always
-    ports: [ "9000:9000", "9001:9001" ]
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    command: server /data --console-address ":9001"
-    volumes: [ minio_data:/data ]
+    redis:
+        image: redis:7
+        container_name: redis_cache
+        restart: always
+        ports: ['6379:6379']
+
+    rabbitmq:
+        image: rabbitmq:3-management
+        container_name: rabbitmq_broker
+        restart: always
+        ports: ['5672:5672', '15672:15672']
+        environment:
+            RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+            RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+
+    minio:
+        image: minio/minio
+        container_name: minio_storage
+        restart: always
+        ports: ['9000:9000', '9001:9001']
+        environment:
+            MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+        command: server /data --console-address ":9001"
+        volumes: [minio_data:/data]
 
 volumes:
-  postgres_data:
-  mongodb_data:
-  minio_data:
+    postgres_data:
+    mongodb_data:
+    minio_data:

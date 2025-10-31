@@ -1,9 +1,9 @@
-// auth-service/src/users/user.routes.ts
 import { Router } from 'express';
 import { UserController } from './user.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { body } from 'express-validator';
 import passport from 'passport';
+import { validateRequest } from '../middleware/validate.middleware';
 
 const router = Router();
 
@@ -14,10 +14,18 @@ router.post(
     body('password')
         .isLength({ min: 6 })
         .withMessage('Password must be at least 6 characters long'),
-    body('name').notEmpty().withMessage('Name is required'),
+    body('username').notEmpty().withMessage('Username is required'),
+    // 3. ОБРАБОТЧИК ВАЛИДАЦИИ
+    validateRequest, // 4. КОНТРОЛЛЕР
     UserController.register
 );
-router.post('/login', UserController.login);
+router.post(
+    '/login',
+    body('email').isEmail().withMessage('Please enter a valid email'),
+    body('password').notEmpty().withMessage('Password is required'),
+    validateRequest, // <-- ДОБАВИТЬ ЗДЕСЬ
+    UserController.login
+);
 router.get('/me', authMiddleware, UserController.getMe);
 
 // Google OAuth Routes
