@@ -1,56 +1,49 @@
-import { Like } from 'src/modules/likes/domain/likes.entity';
-import { Message } from 'src/modules/messages/domain/messages.entity';
-import { Post } from 'src/modules/posts/domain/post.entity';
-import { Comment } from 'src/modules/comments/domain/comments.entity';
-import { Notification } from 'src/modules/notifications/domain/notifications.entity';
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Follow } from './followers.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
+// ✅ ПРАВИЛЬНЫЕ ИМПОРТЫ
+import { Account } from 'src/modules/accounts/domain/account.entity';
+import { Profile } from 'src/modules/profiles/domain/profile.entity';
 
-@Entity()
+export enum UserRole {
+  USER = 'User',
+  ADMIN = 'Admin',
+}
+
+@Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column({ type: 'varchar', length: 255, unique: true })
-  username: string;
+  // ✅ ДОБАВЛЕНЫ КОЛОНКИ ИЗ СПЕЦИФИКАЦИИ
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.USER,
+  })
+  role: UserRole;
 
-  @Column({ type: 'varchar', length: 255 })
-  password_hash: string;
+  @Column({ default: false })
+  disabled: boolean;
 
-  @Column({ type: 'varchar', length: 255, unique: true })
-  email: string;
-
-  @Column({ type: 'varchar', length: 20, nullable: true })
-  phone_number: string;
-
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
-  //Relationships
-  @OneToMany(() => Post, (post) => post.user)
-  posts: Post[];
+  // (created_by, updated_by пока пропускаем для простоты)
 
-  @OneToMany(() => Comment, (comment) => comment.user)
-  comments: Comment[];
+  // --- Связи ---
+  @OneToMany(() => Account, (account) => account.user)
+  accounts: Account[];
 
-  @OneToMany(() => Like, (like) => like.user)
-  likes: Like[];
-
-  @OneToMany(() => Message, (message) => message.sender)
-  sentMessages: Message[];
-
-  @OneToMany(() => Message, (message) => message.receiver)
-  receivedMessages: Message[];
-
-  @OneToMany(() => Notification, (notification) => notification.recipient)
-  notifications: Notification[];
-
-  @OneToMany(() => Follow, (follow) => follow.followingUser)
-  following: Follow[];
-
-  @OneToMany(() => Follow, (follow) => follow.followedUser)
-  followers: Follow[];
+  @OneToOne(() => Profile, (profile) => profile.user)
+  profile: Profile;
 }

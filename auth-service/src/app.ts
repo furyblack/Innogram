@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import passport from 'passport';
-import { GoogleStrategy } from './strategies/google-strategy'; // Use correct filename
+//import { GoogleStrategy } from './strategies/google-strategy'; // Use correct filename
 import { errorHandler } from './middleware/error.middleware';
 import userRoutes from './users/user.routes';
 
@@ -19,7 +19,7 @@ app.use(express.json());
 
 // Initialize Passport
 app.use(passport.initialize());
-passport.use(GoogleStrategy); // Register the strategy instance
+//passport.use(GoogleStrategy); // Register the strategy instance
 
 // Simple root route
 app.get('/', (req: Request, res: Response) => {

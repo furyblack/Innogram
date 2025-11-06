@@ -1,7 +1,12 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  HttpException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config'; // Для чтения env-переменных
 import { firstValueFrom } from 'rxjs';
+import { AxiosError } from 'axios';
 
 // Интерфейс для ответа от Auth-Service
 interface AuthTokens {
@@ -35,11 +40,10 @@ export class CoreAuthService {
       // auth-service должен вернуть JSON вида { accessToken, refreshToken }
       return response.data;
     } catch (error) {
-      // TODO: Обработать ошибки (например, "user already exists")
-      throw new InternalServerErrorException(
-        'Registration failed',
-        error.message,
-      );
+      if (error instanceof AxiosError && error.response) {
+        throw new HttpException(error.response.data, error.response.status);
+      }
+      throw new InternalServerErrorException('Signup failed', error.message);
     }
   }
 
@@ -55,7 +59,9 @@ export class CoreAuthService {
       // auth-service должен вернуть JSON вида { accessToken, refreshToken }
       return response.data;
     } catch (error) {
-      // TODO: Обработать ошибки (401 - "invalid credentials")
+      if (error instanceof AxiosError && error.response) {
+        throw new HttpException(error.response.data, error.response.status);
+      }
       throw new InternalServerErrorException('Login failed', error.message);
     }
   }

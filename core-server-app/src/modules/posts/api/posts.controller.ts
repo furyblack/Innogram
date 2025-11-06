@@ -5,10 +5,9 @@ import {
   Get,
   Param,
   Patch,
-  Post as HttpPost,
   Post,
   UseGuards,
-  ParseIntPipe,
+  ParseUUIDPipe, // <-- ИЗМЕНЕНО
   Query,
 } from '@nestjs/common';
 import { PostsService } from '../application/posts.service';
@@ -25,7 +24,7 @@ export class PostsController {
   @Post()
   @UseGuards(AuthGuard('jwt'))
   async create(
-    @CurrentUser('userId') userId: number,
+    @CurrentUser('userId') userId: string, // <-- ТИП ИЗМЕНЕН
     @Body() dto: CreatePostDto,
   ) {
     return this.postsService.createPost(userId, dto);
@@ -37,15 +36,16 @@ export class PostsController {
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
+    // <-- ИЗМЕНЕНО
     return this.postsService.findById(id);
   }
 
   @Patch(':id')
   @UseGuards(AuthGuard('jwt'))
   async update(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser('userId') userId: number,
+    @Param('id', ParseUUIDPipe) id: string, // <-- ИЗМЕНЕНО
+    @CurrentUser('userId') userId: string, // <-- ТИП ИЗМЕНЕН
     @Body() dto: UpdatePostDto,
   ) {
     return this.postsService.updatePost(id, userId, dto);
@@ -53,7 +53,10 @@ export class PostsController {
 
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
-  async remove(@Param('id') id: number, @CurrentUser('userId') userId: number) {
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string, // <-- ИЗМЕНЕНО
+    @CurrentUser('userId') userId: string, // <-- ТИП ИЗМЕНЕН
+  ) {
     return this.postsService.removePost(id, userId);
   }
 }

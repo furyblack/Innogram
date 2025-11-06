@@ -1,46 +1,50 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config'; // <--- ИМПОРТ
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CommentsModule } from './modules/comments/comments.module';
 import { UsersModule } from './modules/users/user.module';
 import { PostsModule } from './modules/posts/post.module';
-import { LikesModule } from './modules/likes/likes.module';
-import { NotificationsModule } from './modules/notifications/notification.module';
 import { AuthModule } from './auth/auth.module';
+import { LikesModule } from './modules/likes/likes.module';
+import { AccountsModule } from './modules/accounts/accounts.module'; // <-- ДОБАВЛЕНО
+import { ProfilesModule } from './modules/profiles/profile.module'; // <-- ДОБАВЛЕНО
+import { ChatsModule } from './modules/chat/chat.module';
+import { MessagesModule } from './modules/messages/messages.module';
 
 @Module({
   imports: [
-    // 1. Подключаем ConfigModule, чтобы он читал .env файлы и переменные окружения
     ConfigModule.forRoot({
-      isGlobal: true, // Делаем его доступным во всем приложении
-      envFilePath: '.env', // Указываем, какой файл читать (для локальной разработки)
+      isGlobal: true,
+      envFilePath: '.env',
     }),
-
-    // 2. Настраиваем TypeOrmModule асинхронно, чтобы использовать ConfigService
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule], // Импортируем ConfigModule
-      inject: [ConfigService], // Внедряем ConfigService
+      imports: [ConfigModule],
+      inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        // 3. Берем значения из переменных окружения
         host: configService.get<string>('DATABASE_HOST'),
         port: configService.get<number>('DATABASE_PORT'),
         username: configService.get<string>('DATABASE_USER'),
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
+        // Гораздо надежнее указать сущности явно
+        // entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        autoLoadEntities: true, // <-- NestJS сам найдет все .entity.ts
+        synchronize: true, // В production должно быть false
         logging: true,
       }),
     }),
     AuthModule,
     UsersModule,
+    AccountsModule, // <-- ДОБАВЛЕНО
+    ProfilesModule, // <-- ДОБАВЛЕНО
     PostsModule,
     LikesModule,
     CommentsModule,
-    NotificationsModule,
+    ChatsModule,
+    MessagesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

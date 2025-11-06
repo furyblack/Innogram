@@ -8,8 +8,8 @@ import { LoginDto } from './dto/login.dto';
 export class AuthController {
   constructor(private readonly coreAuthService: CoreAuthService) {}
 
-  @Post('register')
-  async register(
+  @Post('signup')
+  async signUp(
     @Body() signUpDto: SignUpDto,
     @Res({ passthrough: true }) res: Response,
   ) {

@@ -11,39 +11,36 @@ export class UsersRepository {
     private readonly repo: Repository<User>,
   ) {}
 
-  async createUser(data: Partial<User>): Promise<User> {
-    const user = this.repo.create(data);
-    return await this.repo.save(user);
-  }
+  // (create User) - удален, этим занимается auth-service
 
   async findAll(paginationDto: PaginationDto) {
     const { page = 1, limit = 10 } = paginationDto;
     const skip = (page - 1) * limit;
 
     return this.repo.find({
-      // Здесь можно выбрать, какие поля возвращать, чтобы не светить пароли
-      select: ['id', 'username', 'created_at'],
+      select: ['id', 'role', 'disabled', 'created_at'], // <-- username и email УДАЛЕНЫ
       skip: skip,
       take: limit,
       order: { created_at: 'DESC' },
     });
   }
 
-  async findById(id: number): Promise<User | null> {
-    return await this.repo.findOne({ where: { id } });
+  async findById(id: string): Promise<User | null> {
+    // <-- ТИП ИЗМЕНЕН
+    return await this.repo.findOneBy({ id });
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return await this.repo.findOne({ where: { email } });
-  }
+  // (findByEmail) - удален, переехал в AccountsRepository
 
-  async updateUser(id: number, data: Partial<User>): Promise<User | null> {
+  async updateUser(id: string, data: Partial<User>): Promise<User | null> {
+    // <-- ТИП ИЗМЕНЕН
     await this.repo.update(id, data);
     return this.findById(id);
   }
 
-  async deleteUser(id: number): Promise<boolean> {
+  async deleteUser(id: string): Promise<boolean> {
+    // <-- ТИП ИЗМЕНЕН
     const result = await this.repo.delete(id);
-    return true;
+    return !!result.affected;
   }
 }

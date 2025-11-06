@@ -2,14 +2,14 @@ services:
     # -------------------------------------
     # ФРОНТЕНД
     # -------------------------------------
-    client-app:
-        build: ./client-app
-        container_name: client-app
-        restart: always
-        ports:
-            - '1024:3000'
-        depends_on:
-            - core-server-app
+    # client-app:
+    #     build: ./client-app
+    #     container_name: client-app
+    #     restart: always
+    #     ports:
+    #         - '1024:3000'
+    #     depends_on:
+    #         - core-server-app
 
     # -------------------------------------
     # ОСНОВНОЙ БЭКЕНД (NestJS) - ИСПРАВЛЕНО

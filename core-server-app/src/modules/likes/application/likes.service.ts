@@ -3,51 +3,91 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { LikesRepository } from '../infrastructure/likes.repository';
 import { PostsRepository } from 'src/modules/posts/infrastructure/posts.repository';
-import { UsersRepository } from 'src/modules/users/infrastructure/users.repository';
+import { ProfileRepository } from 'src/modules/profiles/infrastructure/profile.repository';
+import { PostLikeRepository } from '../infrastructure/post-like.repository';
+import { CommentLikeRepository } from '../infrastructure/comment-like.repository';
+import { CommentsRepository } from 'src/modules/comments/infrastructure/comments.repository';
 
 @Injectable()
 export class LikesService {
   constructor(
-    private readonly likesRepo: LikesRepository,
+    private readonly postLikeRepo: PostLikeRepository,
+    private readonly commentLikeRepo: CommentLikeRepository,
+    private readonly profileRepo: ProfileRepository,
     private readonly postsRepo: PostsRepository,
-    private readonly usersRepo: UsersRepository,
+    private readonly commentsRepo: CommentsRepository,
   ) {}
 
-  async likePost(userId: number, postId: number) {
-    // 1. Проверяем, существуют ли пост и пользователь
+  // --- ЛАЙКИ ПОСТОВ ---
+
+  async likePost(userId: string, postId: string) {
+    const profile = await this.profileRepo.findByUserId(userId);
+    if (!profile) throw new NotFoundException('Profile not found');
+
     const post = await this.postsRepo.findById(postId);
-    if (!post) {
-      throw new NotFoundException(`Post with ID ${postId} not found`);
-    }
+    if (!post) throw new NotFoundException('Post not found');
 
-    const user = await this.usersRepo.findById(userId);
-    if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
-    }
-
-    // 2. Проверяем, не лайкнул ли пользователь этот пост ранее
-    const existingLike = await this.likesRepo.findOne(userId, postId);
+    const existingLike = await this.postLikeRepo.findOneByProfileAndPost(
+      profile.id,
+      postId,
+    );
     if (existingLike) {
       throw new ConflictException('You have already liked this post');
     }
 
-    // 3. Создаем лайк
-    return this.likesRepo.create(user, post);
+    return this.postLikeRepo.create(profile, post);
   }
 
-  async unlikePost(userId: number, postId: number) {
-    // 1. Находим лайк, который нужно удалить
-    const like = await this.likesRepo.findOne(userId, postId);
+  async unlikePost(userId: string, postId: string) {
+    const profile = await this.profileRepo.findByUserId(userId);
+    if (!profile) throw new NotFoundException('Profile not found');
+
+    const like = await this.postLikeRepo.findOneByProfileAndPost(
+      profile.id,
+      postId,
+    );
     if (!like) {
       throw new NotFoundException('You have not liked this post');
     }
 
-    // 2. Удаляем лайк
-    await this.likesRepo.remove(like);
+    await this.postLikeRepo.delete(like.id);
+    return { message: 'Like successfully removed' };
+  }
 
-    // Возвращаем сообщение об успехе
+  // --- ЛАЙКИ КОММЕНТАРИЕВ ---
+
+  async likeComment(userId: string, commentId: string) {
+    const profile = await this.profileRepo.findByUserId(userId);
+    if (!profile) throw new NotFoundException('Profile not found');
+
+    const comment = await this.commentsRepo.findById(commentId);
+    if (!comment) throw new NotFoundException('Comment not found');
+
+    const existingLike = await this.commentLikeRepo.findOneByProfileAndComment(
+      profile.id,
+      commentId,
+    );
+    if (existingLike) {
+      throw new ConflictException('You have already liked this comment');
+    }
+
+    return this.commentLikeRepo.create(profile, comment);
+  }
+
+  async unlikeComment(userId: string, commentId: string) {
+    const profile = await this.profileRepo.findByUserId(userId);
+    if (!profile) throw new NotFoundException('Profile not found');
+
+    const like = await this.commentLikeRepo.findOneByProfileAndComment(
+      profile.id,
+      commentId,
+    );
+    if (!like) {
+      throw new NotFoundException('You have not liked this comment');
+    }
+
+    await this.commentLikeRepo.delete(like.id);
     return { message: 'Like successfully removed' };
   }
 }

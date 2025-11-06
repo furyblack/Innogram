@@ -1,6 +1,4 @@
-import { User } from 'src/modules/users/domain/user.entity';
-import { Comment } from 'src/modules/comments/domain/comments.entity';
-import { Like } from 'src/modules/likes/domain/likes.entity';
+import { PostLike } from 'src/modules/likes/domain/post-like.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -9,21 +7,28 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
+import { Profile } from 'src/modules/profiles/domain/profile.entity';
+import { Comment } from 'src/modules/comments/domain/comments.entity';
 
-@Entity()
+@Entity('posts')
 export class Post {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  // ✅ ДОБАВЛЕНЫ КОЛОНКИ ИЗ ТВОЕГО DTO
+  @Column({ type: 'varchar', length: 255 }) // Добавлено
   title: string;
 
   @Column({ type: 'text' })
-  body: string;
+  content: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', length: 50, default: 'draft' }) // Добавлено
   status: string;
+
+  // ❌ @Column({ default: false })
+  // ❌ is_archived: boolean; // Удалено, т.к. есть status
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
@@ -31,13 +36,17 @@ export class Post {
   @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
-  // Relationships
-  @ManyToOne(() => User, (user) => user.posts)
-  user: User;
+  // --- Связи ---
+  @ManyToOne(() => Profile, (profile) => profile.posts, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'profile_id' })
+  profile: Profile;
+
+  @Column({ type: 'uuid' })
+  profile_id: string;
+
+  @OneToMany(() => PostLike, (like) => like.post)
+  likes: PostLike[];
 
   @OneToMany(() => Comment, (comment) => comment.post)
   comments: Comment[];
-
-  @OneToMany(() => Like, (like) => like.post)
-  likes: Like[];
 }

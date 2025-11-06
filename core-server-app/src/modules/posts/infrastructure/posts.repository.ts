@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common'; // <-- Добавлен NotFound
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from '../domain/post.entity';
 import { Repository } from 'typeorm';
-import { User } from 'src/modules/users/domain/user.entity';
+// ❌ import { User } from 'src/modules/users/domain/user.entity';
+import { Profile } from 'src/modules/profiles/domain/profile.entity'; // ✅
 import { CreatePostDto } from '../dto/create-post.dto';
 import { UpdatePostDto } from '../dto/update-post.dto';
 import { PaginationDto } from 'src/common/pagination.dto';
@@ -11,18 +12,21 @@ import { PaginationDto } from 'src/common/pagination.dto';
 export class PostsRepository {
   constructor(
     @InjectRepository(Post) private readonly postRepo: Repository<Post>,
-    @InjectRepository(User) private readonly userRepo: Repository<User>,
+    // ❌ @InjectRepository(User) private readonly userRepo: Repository<User>,
+    @InjectRepository(Profile)
+    private readonly profileRepo: Repository<Profile>, // ✅
   ) {}
 
-  async createPost(userId: number, dto: CreatePostDto) {
-    const user = await this.userRepo.findOneBy({ id: userId });
-    if (!user) {
-      throw new Error(`User with id ${userId} not found`);
+  async createPost(profileId: string, dto: CreatePostDto): Promise<Post> {
+    // <-- ТИП ИЗМЕНЕН
+    const profile = await this.profileRepo.findOneBy({ id: profileId }); // ✅
+    if (!profile) {
+      throw new NotFoundException(`Profile with id ${profileId} not found`);
     }
 
     const newPost = this.postRepo.create({
       ...dto,
-      user,
+      profile, // <-- ИЗМЕНЕНО
     });
 
     return this.postRepo.save(newPost);
@@ -32,26 +36,29 @@ export class PostsRepository {
     const { page = 1, limit = 10 } = paginationDto;
     const skip = (page - 1) * limit;
     return this.postRepo.find({
-      relations: ['user', 'comments'],
-      skip: skip, // <-- Пропустить N записей
-      take: limit, // <-- Взять M записей
-      order: { created_at: 'DESC' }, // Сортируем по дате создания
+      relations: ['profile', 'comments'], // <-- 'user' ИЗМЕНЕН на 'profile'
+      skip: skip,
+      take: limit,
+      order: { created_at: 'DESC' },
     });
   }
 
-  async findById(id: number) {
+  async findById(id: string): Promise<Post | null> {
+    // <-- ТИП ИЗМЕНЕН
     return this.postRepo.findOne({
       where: { id },
-      relations: ['user', 'comments'],
+      relations: ['profile', 'comments'], // <-- 'user' ИЗМЕНЕН на 'profile'
     });
   }
 
-  async updatePost(id: number, dto: UpdatePostDto) {
-    await this.postRepo.update(id, { ...dto, updated_at: new Date() });
+  async updatePost(id: string, dto: UpdatePostDto): Promise<Post | null> {
+    // <-- ТИП ИЗМЕНЕН
+    await this.postRepo.update(id, dto);
     return this.findById(id);
   }
 
-  async removePost(id: number) {
+  async removePost(id: string) {
+    // <-- ТИП ИЗМЕНЕН
     return this.postRepo.delete(id);
   }
 }

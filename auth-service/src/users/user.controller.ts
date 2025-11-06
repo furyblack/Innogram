@@ -1,36 +1,27 @@
 import { Request, Response } from 'express';
-import { UserService } from './user.service';
+import { UserService } from './user.service'; // Убедись, что путь правильный
 
 export class UserController {
-    public static async register(req: Request, res: Response): Promise<void> {
-        try {
-            const { email, password, username } = req.body;
-            const { accessToken, refreshToken } =
-                await UserService.registerUser(
-                    email,
-                    password,
-                    username // <-- Передаем как отдельные аргументы
-                );
-            res.status(201).json({ accessToken, refreshToken });
-        } catch (error: any) {
-            res.status(409).json({ error: error.message });
-        }
-    }
+  public static async register(req: Request, res: Response): Promise<void> {
+    try {
+      // ✅ Передаем ВЕСЬ req.body как DTO
+      const { accessToken, refreshToken } = await UserService.registerUser(req.body);
 
-    public static async login(req: Request, res: Response): Promise<void> {
-        try {
-            const { email, password } = req.body;
-            const { accessToken, refreshToken } = await UserService.login(
-                email,
-                password
-            );
-            res.status(200).json({ accessToken, refreshToken });
-        } catch (error: any) {
-            res.status(401).json({ error: error.message }); // 401 - Unauthorized
-        }
+      res.status(201).json({ accessToken, refreshToken });
+    } catch (error) {
+      // Умная обработка ошибок
+      const status = error.status || 400; // 409 от ConflictError, 500 от InternalError
+      res.status(status).json({ error: error.message });
     }
+  }
 
-    public static async getMe(req: Request, res: Response): Promise<void> {
-        res.status(200).json({ user: req.user });
+  public static async login(req: Request, res: Response): Promise<void> {
+    try {
+      const { accessToken, refreshToken } = await UserService.login(req.body);
+      res.status(200).json({ accessToken, refreshToken });
+    } catch (error) {
+      const status = error.status || 401; // 401 Unauthorized
+      res.status(status).json({ error: error.message });
     }
+  }
 }
