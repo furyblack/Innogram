@@ -18,28 +18,28 @@ export enum UserRole {
 @Entity('users')
 export class User {
     @PrimaryGeneratedColumn('uuid')
-    id!: string; // <-- Добавлен '!'
+    id!: string;
 
     @Column({
         type: 'enum',
         enum: UserRole,
         default: UserRole.USER,
     })
-    role!: UserRole; // <-- Добавлен '!'
+    role!: UserRole; 
 
     @Column({ default: false })
-    disabled!: boolean; // <-- Добавлен '!'
+    disabled!: boolean; 
 
     @CreateDateColumn({ type: 'timestamp' })
-    created_at!: Date; // <-- Добавлен '!'
+    created_at!: Date; 
 
     @UpdateDateColumn({ type: 'timestamp' })
-    updated_at!: Date; // <-- Добавлен '!'
+    updated_at!: Date; 
 
     // --- Связи ---
     @OneToMany(() => Account, (account) => account.user)
-    accounts!: Account[]; // <-- Добавлен '!'
+    accounts!: Account[]; 
 
     @OneToOne(() => Profile, (profile) => profile.user)
-    profile!: Profile; // <-- Добавлен '!'
+    profile!: Profile; 
 }

@@ -10,14 +10,15 @@ import {
   ParseUUIDPipe, // <-- ИЗМЕНЕНО
   Query,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { PaginationDto } from 'src/common/pagination.dto';
+import { CurrentUser } from 'src/modules/users/decorators/current-user';
 import { PostsService } from '../application/posts.service';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { UpdatePostDto } from '../dto/update-post.dto';
-import { CurrentUser } from 'src/modules/users/decorators/current-user';
-import { AuthGuard } from '@nestjs/passport';
-import { PaginationDto } from 'src/common/pagination.dto';
 
 @Controller('posts')
+@UseGuards(AuthGuard('jwt'))
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 

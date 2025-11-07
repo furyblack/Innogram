@@ -21,13 +21,13 @@ router.post(
     validateRequest, // 4. КОНТРОЛЛЕР
     UserController.register
 );
-// router.post(
-//     '/login',
-//     body('email').isEmail().withMessage('Please enter a valid email'),
-//     body('password').notEmpty().withMessage('Password is required'),
-//     validateRequest, // <-- ДОБАВИТЬ ЗДЕСЬ
-//     UserController.login
-// );
+router.post(
+    '/login',
+    body('email').isEmail().withMessage('Please enter a valid email'),
+    body('password').notEmpty().withMessage('Password is required'),
+    validateRequest, // <-- ДОБАВИТЬ ЗДЕСЬ
+    UserController.login
+);
 // router.get('/me', authMiddleware, UserController.getMe);
 
 // Google OAuth Routes

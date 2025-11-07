@@ -9,7 +9,8 @@
         "forceConsistentCasingInFileNames": true,
         "skipLibCheck": true,
         "experimentalDecorators": true, // <-- 1. Убедись, что это есть
-        "emitDecoratorMetadata": true
+        "emitDecoratorMetadata": true,
+        "useUnknownInCatchVariables": false
     },
     "include": ["src"]
 }

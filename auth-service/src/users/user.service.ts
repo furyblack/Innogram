@@ -4,6 +4,7 @@ import { Account, AuthProvider } from '../entities/account.entity';
 import { Profile } from '../entities/profile.entity';
 import * as bcrypt from 'bcrypt';
 import { Repository, EntityManager } from 'typeorm';
+import { tokenService } from '../services/token.service';
 
 // Кастомная ошибка
 class ConflictError extends Error {
@@ -24,7 +25,14 @@ class InternalError extends Error {
     }
 }
 
-// ПРЕДПОЛАГАЮ, ЧТО ТВОЙ DTO ВЫГЛЯДИТ ТАК
+class UnauthorizedError extends Error {
+    public status: number;
+    constructor(message: string) {
+        super(message);
+        this.status = 401;
+    }
+}
+
 interface SignUpDto {
     email: string;
     password: string;
@@ -33,12 +41,13 @@ interface SignUpDto {
     birthday: string;
 }
 
+// <-- ИСПРАВЛЕНО 3: Добавлен DTO для логина вместо 'any'
+interface LoginDto {
+    email: string;
+    password: string;
+}
+
 export class UserService {
-    // ---
-    // ✅ РЕШЕНИЕ:
-    // Мы используем геттеры, чтобы репозитории запрашивались
-    // только когда они нужны (к этому моменту AppDataSource УЖЕ будет инициализирован)
-    // ---
     private get userRepository(): Repository<User> {
         return AppDataSource.getRepository(User);
     }
@@ -55,26 +64,17 @@ export class UserService {
         return AppDataSource.manager;
     }
 
-    // Твой контроллер вызывает статический метод, так что
-    // нам нужно создать инстанс внутри или сделать сервис инстансом.
-    // Давай пока оставим static, но будем создавать инстанс:
-
-    // ЭТОТ МЕТОД ВЫЗЫВАЕТ ТВОЙ КОНТРОЛЛЕР
     public static async registerUser(signUpDto: SignUpDto): Promise<any> {
-        // Создаем инстанс, чтобы получить доступ к геттерам
         const serviceInstance = new UserService();
         return serviceInstance.register(signUpDto);
     }
 
-    // (Логика для логина)
-    public static async login(loginDto: any): Promise<any> {
+    // <-- ИСПРАВЛЕНО 3: Используем LoginDto
+    public static async login(loginDto: LoginDto): Promise<any> {
         const serviceInstance = new UserService();
         return serviceInstance.signIn(loginDto);
     }
 
-    // ---
-    // РЕАЛЬНАЯ ЛОГИКА РЕГИСТРАЦИИ (теперь не-static)
-    // ---
     private async register(signUpDto: SignUpDto) {
         // 1. Проверка на дубликаты
         const existingAccount = await this.accountRepository.findOne({
@@ -94,40 +94,63 @@ export class UserService {
         // 2. Хэш
         const hashedPassword = await bcrypt.hash(signUpDto.password, 10);
 
-        // 3. 🔥 ТРАНЗАКЦИЯ
-        let createdUser: User;
+        // 🔥 ТРАНЗАКЦИЯ
         try {
-            await this.entityManager.transaction(async (manager) => {
-                // 3.1. Создаем User
-                const userRepo = manager.getRepository(User);
-                const newUser = userRepo.create({
-                    // role, disabled - по умолчанию из entity
-                });
-                await userRepo.save(newUser);
-                createdUser = newUser;
+            // Просто присваиваем результат транзакции
+            const createdUser = await this.entityManager.transaction(
+                async (manager) => {
+                    // 3.1. Создаем User
+                    const userRepo = manager.getRepository(User);
+                    const newUser = userRepo.create({
+                        // role, disabled - по умолчанию
+                    });
+                    await userRepo.save(newUser);
 
-                // 3.2. Создаем Account
-                const accountRepo = manager.getRepository(Account);
-                const newAccount = accountRepo.create({
-                    email: signUpDto.email,
-                    password_hash: hashedPassword,
-                    provider: AuthProvider.LOCAL,
-                    user: newUser,
-                    user_id: newUser.id,
-                });
-                await accountRepo.save(newAccount);
+                    // 3.2. Создаем Account
+                    const accountRepo = manager.getRepository(Account);
+                    const newAccount = accountRepo.create({
+                        // <-- ИСПРАВЛЕНО 2: Здесь были пропущены данные
+                        email: signUpDto.email,
+                        password_hash: hashedPassword,
+                        provider: AuthProvider.LOCAL,
+                        user: newUser,
+                        user_id: newUser.id,
+                    });
+                    await accountRepo.save(newAccount);
 
-                // 3.3. Создаем Profile
-                const profileRepo = manager.getRepository(Profile);
-                const newProfile = profileRepo.create({
-                    username: signUpDto.username,
-                    display_name: signUpDto.display_name,
-                    birthday: signUpDto.birthday,
-                    user: newUser,
-                    user_id: newUser.id,
-                });
-                await profileRepo.save(newProfile);
+                    // 3.3. Создаем Profile
+                    const profileRepo = manager.getRepository(Profile);
+                    const newProfile = profileRepo.create({
+                        // <-- ИСПРАВЛЕНО 2: Здесь были пропущены данные
+                        username: signUpDto.username,
+                        display_name: signUpDto.display_name,
+                        birthday: signUpDto.birthday,
+                        user: newUser,
+                        user_id: newUser.id,
+                    });
+                    await profileRepo.save(newProfile);
+
+                    // 3.4. Возвращаем созданного юзера ИЗ КОЛЛБЭКА
+                    return newUser;
+                }
+            );
+
+            // Теперь TypeScript СЧАСТЛИВ.
+            // Он знает, что 'createdUser' имеет тип 'User'
+
+            // ✅ 4. Генерируем НАСТОЯЩИЕ токены
+            const tokens = tokenService.generateTokens({
+                userId: createdUser.id,
             });
+
+            // ✅ 5. Сохраняем Refresh Token в Redis
+            await tokenService.saveRefreshToken(
+                createdUser.id,
+                tokens.refreshToken
+            );
+
+            // ✅ 6. Возвращаем токены
+            return tokens;
         } catch (error) {
             console.error(error); // Посмотрим на реальную ошибку
             throw new InternalError(
@@ -135,31 +158,44 @@ export class UserService {
                 error.message
             );
         }
-
-        if (!createdUser) {
-            throw new InternalError('User was not created');
-        }
-
-        // ЗАГЛУШКА (пока нет токенов):
-        return {
-            accessToken: 'temp_access_token',
-            refreshToken: 'temp_refresh_token',
-        };
     }
 
-    private async signIn(loginDto: any) {
-        // TODO:
-        // 1. Найти account по email:
-        // const account = await this.accountRepository.findOne({ where: { email: loginDto.email } });
-        // if (!account) throw new Error('User not found');
-        // 2. Сравнить хэши:
-        // const isMatch = await bcrypt.compare(loginDto.password, account.password_hash);
-        // if (!isMatch) throw new Error('Invalid credentials');
-        // 3. Вернуть токены, используя account.user_id
+    // <-- ИСПРАВЛЕНО 3: Используем LoginDto вместо 'any'
+    private async signIn(loginDto: LoginDto) {
+        // ✅ 1. Найти account по email
+        const account = await this.accountRepository.findOne({
+            where: { email: loginDto.email },
+            relations: ['user'], // <-- ВАЖНО: загружаем связь с user
+        });
 
-        return {
-            accessToken: 'temp_login_token',
-            refreshToken: 'temp_login_refresh',
-        };
+        if (!account) {
+            throw new UnauthorizedError('Invalid credentials');
+        }
+
+        // ✅ 2. Сравнить хэши
+        const isMatch = await bcrypt.compare(
+            loginDto.password,
+            account.password_hash
+        );
+        if (!isMatch) {
+            throw new UnauthorizedError('Invalid credentials');
+        }
+
+        if (!account.user) {
+            // Такого быть не должно, но на всякий случай
+            throw new InternalError('Account is not linked to a user');
+        }
+
+        // ✅ 3. Генерируем НАСТОЯЩИЕ токены, используя account.user_id
+        const tokens = tokenService.generateTokens({ userId: account.user.id });
+
+        // ✅ 4. Сохраняем Refresh Token в Redis
+        await tokenService.saveRefreshToken(
+            account.user.id,
+            tokens.refreshToken
+        );
+
+        // ✅ 5. Возвращаем токены
+        return tokens;
     }
 }

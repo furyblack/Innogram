@@ -20,12 +20,12 @@ export class AuthController {
     // 2. Устанавливаем HttpOnly куки (как по схеме!)
     res.cookie('access_token', accessToken, {
       httpOnly: true,
-      secure: true, // В production всегда true
+      secure: false, // В production всегда true
       sameSite: 'strict',
     });
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
-      secure: true,
+      secure: false,
       sameSite: 'strict',
       path: '/auth/refresh', // Refresh-токен должен быть доступен только для /auth/refresh
     });
@@ -46,12 +46,12 @@ export class AuthController {
     // 2. Устанавливаем куки (так же, как при регистрации)
     res.cookie('access_token', accessToken, {
       httpOnly: true,
-      secure: true,
+      secure: false,
       sameSite: 'strict',
     });
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
-      secure: true,
+      secure: false,
       sameSite: 'strict',
       path: '/auth/refresh',
     });
