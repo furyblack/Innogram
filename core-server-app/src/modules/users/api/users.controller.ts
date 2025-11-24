@@ -5,6 +5,7 @@ import {
   UseGuards,
   ParseUUIDPipe, // <-- ИЗМЕНЕНО
   Query,
+  Delete,
 } from '@nestjs/common';
 import { UsersService } from '../application/users.service';
 import { PaginationDto } from 'src/common/pagination.dto';
@@ -27,6 +28,12 @@ export class UsersController {
   getUser(@Param('id', ParseUUIDPipe) id: string) {
     // <-- ИЗМЕHEHO
     return this.usersService.getUserById(id);
+  }
+
+  @Delete(':id')
+  deleteUser(@Param('id', ParseUUIDPipe) id: string) {
+    // <-- ИЗМЕHEHO
+    return this.usersService.deleteUser(id);
   }
 }
 

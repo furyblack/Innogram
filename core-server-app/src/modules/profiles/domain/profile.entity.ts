@@ -32,7 +32,7 @@ export class Profile {
   @Column({ type: 'varchar', length: 100 })
   display_name: string;
 
-  @Column({ type: 'date' })
+  @Column({ type: 'date', nullable: true })
   birthday: Date;
 
   @Column({ type: 'text', nullable: true })

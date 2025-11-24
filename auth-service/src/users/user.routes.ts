@@ -28,6 +28,7 @@ router.post(
     validateRequest, // <-- ДОБАВИТЬ ЗДЕСЬ
     UserController.login
 );
+router.post('/social-login', UserController.socialLogin);
 // router.get('/me', authMiddleware, UserController.getMe);
 
 // Google OAuth Routes

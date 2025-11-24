@@ -5,6 +5,7 @@ import { Profile } from '../entities/profile.entity';
 import * as bcrypt from 'bcrypt';
 import { Repository, EntityManager } from 'typeorm';
 import { tokenService } from '../services/token.service';
+import { SocialLoginDto } from './dto/social-login.dto';
 
 // Кастомная ошибка
 class ConflictError extends Error {
@@ -64,6 +65,7 @@ export class UserService {
         return AppDataSource.manager;
     }
 
+    // todo: разобраться, нет ли проблем с тем что создается экземпляр класса каждый раз (не депенденси инжекшн)
     public static async registerUser(signUpDto: SignUpDto): Promise<any> {
         const serviceInstance = new UserService();
         return serviceInstance.register(signUpDto);
@@ -73,6 +75,75 @@ export class UserService {
     public static async login(loginDto: LoginDto): Promise<any> {
         const serviceInstance = new UserService();
         return serviceInstance.signIn(loginDto);
+    }
+
+    public static async socialLogin(dto: SocialLoginDto): Promise<any> {
+        const service = new UserService();
+        return service.handleSocialLogin(dto);
+    }
+
+    private async handleSocialLogin(dto: SocialLoginDto) {
+        // 1. Ищем аккаунт по provider + email
+        // Важно: ищем именно в таблице Account
+        let account = await this.accountRepository.findOne({
+            where: {
+                email: dto.email,
+                provider: dto.provider as any, // 'google'
+            },
+            relations: ['user'],
+        });
+
+        let user: User;
+
+        // 2. Если аккаунта нет - это РЕГИСТРАЦИЯ
+        if (!account) {
+            // Тут нужна проверка: а вдруг такой email уже занят 'local' провайдером?
+            // Для простоты пока опустим слияние аккаунтов, но в идеале надо проверить.
+
+            // НАЧИНАЕМ ТРАНЗАКЦИЮ
+            await this.entityManager.transaction(async (manager) => {
+                // А. Создаем User
+                const userRepo = manager.getRepository(User);
+                user = userRepo.create({}); // role по умолчанию User
+                await userRepo.save(user);
+
+                // Б. Создаем Account (без пароля, но с providerId)
+                const accountRepo = manager.getRepository(Account);
+                const newAccount = accountRepo.create({
+                    email: dto.email,
+                    provider: dto.provider as any,
+                    password_hash: 'social_login_no_pass', // Заглушка, т.к. пароля нет
+                    user: user,
+                    user_id: user.id,
+                    // В сущность Account стоит добавить поле providerId, если его нет,
+                    // но пока можно без него, уникальность по email+provider
+                });
+                await accountRepo.save(newAccount);
+
+                // В. Создаем Profile
+                const profileRepo = manager.getRepository(Profile);
+                const newProfile = profileRepo.create({
+                    username: dto.username, // Придет сгенерированный
+                    display_name: dto.displayName,
+                    avatar_url: dto.avatarUrl,
+                    user: user,
+                    user_id: user.id,
+                });
+                await profileRepo.save(newProfile);
+            });
+        } else {
+            // 3. Если аккаунт есть - это ВХОД
+            if (!account.user) {
+                throw new InternalError('Orphaned account found');
+            }
+            user = account.user;
+        }
+
+        // 4. Генерируем токены
+        const tokens = tokenService.generateTokens({ userId: user!.id });
+        await tokenService.saveRefreshToken(user!.id, tokens.refreshToken);
+
+        return tokens;
     }
 
     private async register(signUpDto: SignUpDto) {

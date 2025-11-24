@@ -65,4 +65,22 @@ export class CoreAuthService {
       throw new InternalServerErrorException('Login failed', error.message);
     }
   }
+
+  async handleSocialLogin(userProfile: any): Promise<AuthTokens> {
+    try {
+      // Шлем POST запрос в Auth Service
+      const response = await firstValueFrom(
+        this.httpService.post<AuthTokens>(
+          `${this.authServiceUrl}/api/auth/social-login`,
+          userProfile,
+        ),
+      );
+      return response.data;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Social login failed',
+        error.message,
+      );
+    }
+  }
 }

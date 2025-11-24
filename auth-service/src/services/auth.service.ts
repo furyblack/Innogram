@@ -48,6 +48,7 @@ export class AuthService {
 
     // signUpDto приходит из core-service (с email, password, username, display_name, birthday)
     async registerUser(signUpDto: any) {
+        
         // 1. Проверка на дубликаты
         const existingAccount = await this.accountRepository.findOne({
             where: { email: signUpDto.email },
