@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import * as dotenv from 'dotenv';
 import { AppModule } from './app.module';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   dotenv.config();
@@ -18,6 +19,8 @@ async function bootstrap() {
 
   // глобальный префикс для API
   app.setGlobalPrefix('api');
+
+  app.use(cookieParser());
 
   // включаем CORS
   app.enableCors({

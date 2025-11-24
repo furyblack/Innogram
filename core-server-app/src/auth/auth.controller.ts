@@ -26,7 +26,7 @@ export class AuthController {
     const { accessToken, refreshToken } =
       await this.coreAuthService.handleSignUp(signUpDto);
 
-    // 2. Устанавливаем HttpOnly куки (как по схеме!)
+    // 2. Устанавливаем HttpOnly куки
     res.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: false, // В production всегда true

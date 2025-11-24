@@ -7,7 +7,7 @@ import {
   Patch,
   Post,
   UseGuards,
-  ParseUUIDPipe, // <-- ИЗМЕНЕНО
+  ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -25,7 +25,7 @@ export class PostsController {
   @Post()
   @UseGuards(AuthGuard('jwt'))
   async create(
-    @CurrentUser('userId') userId: string, // <-- ТИП ИЗМЕНЕН
+    @CurrentUser('userId') userId: string,
     @Body() dto: CreatePostDto,
   ) {
     return this.postsService.createPost(userId, dto);
