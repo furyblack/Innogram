@@ -10,45 +10,37 @@ import {
 import { Profile } from 'src/modules/profiles/domain/profile.entity';
 import { Chat } from 'src/modules/chat/domain/chat.entity';
 
-@Entity('messages')
+@Entity('Messages')
 export class Message {
-  @PrimaryGeneratedColumn('uuid') // <-- ИЗМЕНЕНО
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'text' }) // <-- ИЗМЕНЕНО (с 'body')
+  @Column({ type: 'text' })
   content: string;
 
   @CreateDateColumn({ type: 'timestamp' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
-  updated_at: Date;
+  updatedAt: Date;
 
   @Column({ default: false })
-  is_edited: boolean;
+  isEdited: boolean;
 
   @Column({ default: false })
   deleted: boolean;
 
-  // --- Связи (по спецификации) ---
-  @ManyToOne(() => Profile, { onDelete: 'CASCADE' }) // <-- ИЗМЕНЕНО
-  @JoinColumn({ name: 'profile_id' })
-  profile: Profile; // Отправитель
+  @ManyToOne(() => Profile, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'profileId' })
+  profile: Profile;
 
   @Column({ type: 'uuid' })
-  profile_id: string;
+  profileId: string;
 
-  @ManyToOne(() => Chat, (chat) => chat.messages, { onDelete: 'CASCADE' }) // <-- ИЗМЕНЕНО
-  @JoinColumn({ name: 'chat_id' })
-  chat: Chat; // Чат, к которому принадлежит
+  @ManyToOne(() => Chat, (chat) => chat.messages, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'chatId' })
+  chat: Chat;
 
   @Column({ type: 'uuid' })
-  chat_id: string;
-
-  // ❌ СТАРЫЕ СВЯЗИ УДАЛЕНЫ
-  // @ManyToOne(() => User, (user) => user.sentMessages)
-  // sender: User;
-  //
-  // @ManyToOne(() => User, (user) => user.receivedMessages)
-  // receiver: User;
+  chatId: string;
 }

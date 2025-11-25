@@ -4,11 +4,10 @@ import {
   InternalServerErrorException,
   HttpException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config'; // Для чтения env-переменных
+import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
 
-// Интерфейс для ответа от Auth-Service
 interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -22,7 +21,6 @@ export class CoreAuthService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
-    // Собираем URL из env-переменных, которые у вас в docker-compose
     const host = this.configService.get<string>('AUTH_SERVICE_HOST'); // 'auth-service'
     const port = this.configService.get<string>('AUTH_SERVICE_PORT'); // '4000'
     this.authServiceUrl = `http://${host}:${port}`;
@@ -37,7 +35,7 @@ export class CoreAuthService {
           signUpDto,
         ),
       );
-      // auth-service должен вернуть JSON вида { accessToken, refreshToken }
+      // auth-service должен вернуть JSON вида { accessToken, refreshToken }//
       return response.data;
     } catch (error) {
       if (error instanceof AxiosError && error.response) {
@@ -83,4 +81,20 @@ export class CoreAuthService {
       );
     }
   }
+
+  // ...
+  async logout(userId: string): Promise<void> {
+    try {
+      // Сообщаем auth-service, что надо удалить токен из Redis
+      await firstValueFrom(
+        this.httpService.post(`${this.authServiceUrl}/api/auth/logout`, {
+          userId,
+        }),
+      );
+    } catch (error) {
+      // Не критично, если Redis уже пуст, главное куки очистить
+      console.error('Error calling auth-service logout:', error.message);
+    }
+  }
+  // ...
 }

@@ -69,7 +69,7 @@ export class MessagesService {
       throw new NotFoundException('Message not found');
     }
 
-    if (message.profile_id !== profile.id) {
+    if (message.profileId !== profile.id) {
       throw new ForbiddenException('You can only delete your own messages');
     }
 

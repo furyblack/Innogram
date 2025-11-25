@@ -21,8 +21,8 @@ export class PostLikeRepository {
   ): Promise<PostLike | null> {
     return this.repo.findOne({
       where: {
-        profile_id: profileId,
-        post_id: postId,
+        profileId: profileId,
+        postId: postId,
       },
     });
   }

@@ -18,10 +18,10 @@ export class UsersRepository {
     const skip = (page - 1) * limit;
 
     return this.repo.find({
-      select: ['id', 'role', 'disabled', 'created_at'], // <-- username и email УДАЛЕНЫ
+      select: ['id', 'role', 'disabled', 'createdAt'], // <-- username и email УДАЛЕНЫ
       skip: skip,
       take: limit,
-      order: { created_at: 'DESC' },
+      order: { createdAt: 'DESC' },
     });
   }
 

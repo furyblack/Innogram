@@ -2,7 +2,7 @@ import {
   Controller,
   Delete,
   Param,
-  ParseUUIDPipe, // <-- ИЗМЕНЕНО
+  ParseUUIDPipe,
   Post,
   UseGuards,
 } from '@nestjs/common';

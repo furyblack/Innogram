@@ -11,7 +11,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ChatService } from '../application/chat.service';
 
 @Controller('chats')
-@UseGuards(AuthGuard('jwt')) // Защищаем все роуты чатов
+@UseGuards(AuthGuard('jwt'))
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
@@ -21,7 +21,6 @@ export class ChatController {
     return this.chatService.findChatById(id);
   }
 
-  // Это просто пример, в реальности DTO будет сложнее
   @Post()
   async createChat(@Body() body: { name: string; type: 'group' | 'private' }) {
     return this.chatService.createChat(body.name, body.type);

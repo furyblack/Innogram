@@ -6,8 +6,8 @@ import * as bcrypt from 'bcrypt';
 import { Repository, EntityManager } from 'typeorm';
 import { tokenService } from '../services/token.service';
 import { SocialLoginDto } from './dto/social-login.dto';
+import { v4 as uuidv4 } from 'uuid';
 
-// Кастомная ошибка
 class ConflictError extends Error {
     public status: number;
     constructor(message: string) {
@@ -40,9 +40,9 @@ interface SignUpDto {
     username: string;
     display_name: string;
     birthday: string;
+    avatarUrl?: string;
 }
 
-// <-- ИСПРАВЛЕНО 3: Добавлен DTO для логина вместо 'any'
 interface LoginDto {
     email: string;
     password: string;
@@ -66,12 +66,12 @@ export class UserService {
     }
 
     // todo: разобраться, нет ли проблем с тем что создается экземпляр класса каждый раз (не депенденси инжекшн)
+    // вердикт в эксперсс это норм
     public static async registerUser(signUpDto: SignUpDto): Promise<any> {
         const serviceInstance = new UserService();
         return serviceInstance.register(signUpDto);
     }
 
-    // <-- ИСПРАВЛЕНО 3: Используем LoginDto
     public static async login(loginDto: LoginDto): Promise<any> {
         const serviceInstance = new UserService();
         return serviceInstance.signIn(loginDto);
@@ -83,51 +83,45 @@ export class UserService {
     }
 
     private async handleSocialLogin(dto: SocialLoginDto) {
-        // 1. Ищем аккаунт по provider + email
-        // Важно: ищем именно в таблице Account
         let account = await this.accountRepository.findOne({
             where: {
                 email: dto.email,
-                provider: dto.provider as any, // 'google'
+                provider: dto.provider as any,
             },
             relations: ['user'],
         });
 
         let user: User;
 
-        // 2. Если аккаунта нет - это РЕГИСТРАЦИЯ
         if (!account) {
-            // Тут нужна проверка: а вдруг такой email уже занят 'local' провайдером?
-            // Для простоты пока опустим слияние аккаунтов, но в идеале надо проверить.
-
-            // НАЧИНАЕМ ТРАНЗАКЦИЮ
             await this.entityManager.transaction(async (manager) => {
                 // А. Создаем User
                 const userRepo = manager.getRepository(User);
                 user = userRepo.create({}); // role по умолчанию User
                 await userRepo.save(user);
 
+                const randomPassword = uuidv4();
+                const randomHash = await bcrypt.hash(randomPassword, 10);
+
                 // Б. Создаем Account (без пароля, но с providerId)
                 const accountRepo = manager.getRepository(Account);
                 const newAccount = accountRepo.create({
                     email: dto.email,
                     provider: dto.provider as any,
-                    password_hash: 'social_login_no_pass', // Заглушка, т.к. пароля нет
+                    passwordHash: randomHash,
                     user: user,
-                    user_id: user.id,
-                    // В сущность Account стоит добавить поле providerId, если его нет,
-                    // но пока можно без него, уникальность по email+provider
+                    userId: user.id,
                 });
                 await accountRepo.save(newAccount);
 
                 // В. Создаем Profile
                 const profileRepo = manager.getRepository(Profile);
                 const newProfile = profileRepo.create({
-                    username: dto.username, // Придет сгенерированный
-                    display_name: dto.displayName,
-                    avatar_url: dto.avatarUrl,
+                    userName: dto.username,
+                    displayName: dto.displayName,
+                    avatarUrl: dto.avatarUrl,
                     user: user,
-                    user_id: user.id,
+                    userId: user.id,
                 });
                 await profileRepo.save(newProfile);
             });
@@ -156,7 +150,7 @@ export class UserService {
         }
 
         const existingProfile = await this.profileRepository.findOne({
-            where: { username: signUpDto.username },
+            where: { userName: signUpDto.username },
         });
         if (existingProfile) {
             throw new ConflictError('Username is already taken');
@@ -167,49 +161,39 @@ export class UserService {
 
         // 🔥 ТРАНЗАКЦИЯ
         try {
-            // Просто присваиваем результат транзакции
             const createdUser = await this.entityManager.transaction(
                 async (manager) => {
                     // 3.1. Создаем User
                     const userRepo = manager.getRepository(User);
-                    const newUser = userRepo.create({
-                        // role, disabled - по умолчанию
-                    });
+                    const newUser = userRepo.create({});
                     await userRepo.save(newUser);
 
                     // 3.2. Создаем Account
                     const accountRepo = manager.getRepository(Account);
                     const newAccount = accountRepo.create({
-                        // <-- ИСПРАВЛЕНО 2: Здесь были пропущены данные
                         email: signUpDto.email,
-                        password_hash: hashedPassword,
+                        passwordHash: hashedPassword,
                         provider: AuthProvider.LOCAL,
                         user: newUser,
-                        user_id: newUser.id,
+                        userId: newUser.id, //
                     });
                     await accountRepo.save(newAccount);
 
                     // 3.3. Создаем Profile
                     const profileRepo = manager.getRepository(Profile);
                     const newProfile = profileRepo.create({
-                        // <-- ИСПРАВЛЕНО 2: Здесь были пропущены данные
-                        username: signUpDto.username,
-                        display_name: signUpDto.display_name,
+                        userName: signUpDto.username,
+                        displayName: signUpDto.display_name,
                         birthday: signUpDto.birthday,
                         user: newUser,
-                        user_id: newUser.id,
+                        userId: newUser.id,
+                        avatarUrl: signUpDto.avatarUrl,
                     });
                     await profileRepo.save(newProfile);
-
-                    // 3.4. Возвращаем созданного юзера ИЗ КОЛЛБЭКА
                     return newUser;
                 }
             );
 
-            // Теперь TypeScript СЧАСТЛИВ.
-            // Он знает, что 'createdUser' имеет тип 'User'
-
-            // ✅ 4. Генерируем НАСТОЯЩИЕ токены
             const tokens = tokenService.generateTokens({
                 userId: createdUser.id,
             });
@@ -223,7 +207,7 @@ export class UserService {
             // ✅ 6. Возвращаем токены
             return tokens;
         } catch (error) {
-            console.error(error); // Посмотрим на реальную ошибку
+            console.error(error);
             throw new InternalError(
                 'Registration failed during transaction',
                 error.message
@@ -231,12 +215,11 @@ export class UserService {
         }
     }
 
-    // <-- ИСПРАВЛЕНО 3: Используем LoginDto вместо 'any'
     private async signIn(loginDto: LoginDto) {
         // ✅ 1. Найти account по email
         const account = await this.accountRepository.findOne({
             where: { email: loginDto.email },
-            relations: ['user'], // <-- ВАЖНО: загружаем связь с user
+            relations: ['user'],
         });
 
         if (!account) {
@@ -246,14 +229,13 @@ export class UserService {
         // ✅ 2. Сравнить хэши
         const isMatch = await bcrypt.compare(
             loginDto.password,
-            account.password_hash
+            account.passwordHash
         );
         if (!isMatch) {
             throw new UnauthorizedError('Invalid credentials');
         }
 
         if (!account.user) {
-            // Такого быть не должно, но на всякий случай
             throw new InternalError('Account is not linked to a user');
         }
 
@@ -268,5 +250,10 @@ export class UserService {
 
         // ✅ 5. Возвращаем токены
         return tokens;
+    }
+
+    public static async logout(userId: string): Promise<void> {
+        // Удаляем токен из Redis
+        await tokenService.removeRefreshToken(userId);
     }
 }

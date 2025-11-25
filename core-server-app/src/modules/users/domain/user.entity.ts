@@ -6,8 +6,8 @@ import {
   UpdateDateColumn,
   OneToMany,
   OneToOne,
+  JoinColumn,
 } from 'typeorm';
-// ✅ ПРАВИЛЬНЫЕ ИМПОРТЫ
 import { Account } from 'src/modules/accounts/domain/account.entity';
 import { Profile } from 'src/modules/profiles/domain/profile.entity';
 
@@ -16,12 +16,11 @@ export enum UserRole {
   ADMIN = 'Admin',
 }
 
-@Entity('users')
+@Entity('Users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // ✅ ДОБАВЛЕНЫ КОЛОНКИ ИЗ СПЕЦИФИКАЦИИ
   @Column({
     type: 'enum',
     enum: UserRole,
@@ -33,12 +32,10 @@ export class User {
   disabled: boolean;
 
   @CreateDateColumn({ type: 'timestamp' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
-  updated_at: Date;
-
-  // (created_by, updated_by пока пропускаем для простоты)
+  updatedAt: Date;
 
   // --- Связи ---
   @OneToMany(() => Account, (account) => account.user)

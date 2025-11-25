@@ -6,12 +6,14 @@ import {
   Req,
   UseGuards,
   Get,
+  HttpCode,
 } from '@nestjs/common';
 import { Request, type Response } from 'express';
 import { CoreAuthService } from './auth.service';
 import { SignUpDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { CurrentUser } from 'src/modules/users/decorators/current-user';
 
 @Controller('auth')
 export class AuthController {
@@ -22,37 +24,9 @@ export class AuthController {
     @Body() signUpDto: SignUpDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    // 1. Делегируем всю работу сервису
     const { accessToken, refreshToken } =
       await this.coreAuthService.handleSignUp(signUpDto);
 
-    // 2. Устанавливаем HttpOnly куки
-    res.cookie('access_token', accessToken, {
-      httpOnly: true,
-      secure: false, // В production всегда true
-      sameSite: 'strict',
-    });
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'strict',
-      path: '/auth/refresh', // Refresh-токен должен быть доступен только для /auth/refresh
-    });
-
-    // 3. Отправляем ответ
-    return { message: 'Registration successful 1111' };
-  }
-
-  @Post('login')
-  async login(
-    @Body() loginDto: LoginDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    // 1. Делегируем
-    const { accessToken, refreshToken } =
-      await this.coreAuthService.login(loginDto);
-
-    // 2. Устанавливаем куки (так же, как при регистрации)
     res.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: false,
@@ -65,17 +39,35 @@ export class AuthController {
       path: '/auth/refresh',
     });
 
-    // 3. Отправляем ответ
+    return { message: 'Registration successful 1111' };
+  }
+
+  @Post('login')
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { accessToken, refreshToken } =
+      await this.coreAuthService.login(loginDto);
+
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'strict',
+    });
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'strict',
+      path: '/auth/refresh',
+    });
+
     return { message: 'Login successful' };
   }
 
-  // TODO: Добавить /logout и /refresh
-
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() req) {
-    // Инициализация аутентификации через Google
-  }
+  async googleAuth(@Req() req) {}
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
@@ -97,8 +89,23 @@ export class AuthController {
       path: '/auth/refresh',
     });
 
-    // Редирект на фронтенд (или просто ответ JSON для теста)
-    // res.redirect('http://localhost:3000/frontend-home');
     return res.send({ message: 'Google Login Successful' });
+  }
+
+  @Post('logout')
+  @UseGuards(AuthGuard('jwt')) // Только залогиненный может выйти
+  @HttpCode(200)
+  async logout(
+    @CurrentUser('userId') userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    // 1. Удаляем сессию в Redis (через auth-service)
+    await this.coreAuthService.logout(userId);
+
+    // 2. Очищаем куки (ВАЖНО!)
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token', { path: '/auth/refresh' }); // Путь важен, если он был задан при создании
+
+    return { message: 'Logged out successfully' };
   }
 }

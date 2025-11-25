@@ -38,9 +38,9 @@ export class MessagesRepository {
   ): Promise<Message[]> {
     const skip = (page - 1) * limit;
     return this.repo.find({
-      where: { chat_id: chatId },
+      where: { chatId: chatId },
       relations: ['profile'], // Показываем, кто отправил
-      order: { created_at: 'DESC' }, // Новые внизу
+      order: { createdAt: 'DESC' }, // Новые внизу
       skip,
       take: limit,
     });

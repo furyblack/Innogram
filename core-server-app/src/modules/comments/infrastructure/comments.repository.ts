@@ -34,7 +34,7 @@ export class CommentsRepository {
     return await this.repo.find({
       where: { post: { id: postId } },
       relations: ['profile'], // <-- 'user' ИЗМЕНЕН на 'profile'
-      order: { created_at: 'DESC' },
+      order: { createdAt: 'DESC' },
       skip: skip,
       take: limit,
     });

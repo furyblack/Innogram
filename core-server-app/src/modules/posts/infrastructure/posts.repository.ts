@@ -39,7 +39,7 @@ export class PostsRepository {
       relations: ['profile', 'comments'], // <-- 'user' ИЗМЕНЕН на 'profile'
       skip: skip,
       take: limit,
-      order: { created_at: 'DESC' },
+      order: { createdAt: 'DESC' },
     });
   }
 

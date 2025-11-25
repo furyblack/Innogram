@@ -12,40 +12,37 @@ import {
 import { Profile } from 'src/modules/profiles/domain/profile.entity';
 import { CommentLike } from 'src/modules/likes/domain/comment-like.entity'; // ✅ ИМПОРТ
 
-@Entity('comments')
+@Entity('Comments')
 export class Comment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // ✅ ДОБАВЛЕНЫ КОЛОНКИ
   @Column({ type: 'text' })
-  content: string; // <-- Вот оно!
+  content: string;
 
   @CreateDateColumn({ type: 'timestamp' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
-  updated_at: Date;
+  updatedAt: Date;
 
   // --- Связи ---
   @ManyToOne(() => Profile, (profile) => profile.comments, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'profile_id' })
+  @JoinColumn({ name: 'profileId' })
   profile: Profile;
 
   @Column({ type: 'uuid' })
-  profile_id: string;
+  profileId: string;
 
   @ManyToOne(() => Post, (post) => post.comments, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'post_id' })
+  @JoinColumn({ name: 'postId' })
   post: Post;
 
   @Column({ type: 'uuid' })
-  post_id: string;
+  postId: string;
 
   @OneToMany(() => CommentLike, (like) => like.comment)
   likes: CommentLike[];
-
-  // (parent_comment_id пока пропускаем для простоты)
 }

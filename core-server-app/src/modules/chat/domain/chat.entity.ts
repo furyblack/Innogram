@@ -13,7 +13,7 @@ export enum ChatType {
   GROUP = 'group',
 }
 
-@Entity('chats')
+@Entity('Chats')
 export class Chat {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -32,10 +32,10 @@ export class Chat {
   type: ChatType;
 
   @CreateDateColumn({ type: 'timestamp' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
-  updated_at: Date;
+  updatedAt: Date;
 
   // --- Связи ---
   @OneToMany(() => Message, (message) => message.chat)

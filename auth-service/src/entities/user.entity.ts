@@ -15,7 +15,7 @@ export enum UserRole {
     ADMIN = 'Admin',
 }
 
-@Entity('users')
+@Entity('Users')
 export class User {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
@@ -31,10 +31,10 @@ export class User {
     disabled!: boolean; 
 
     @CreateDateColumn({ type: 'timestamp' })
-    created_at!: Date; 
+    createdAt!: Date; 
 
     @UpdateDateColumn({ type: 'timestamp' })
-    updated_at!: Date; 
+    updatedAt!: Date; 
 
     // --- Связи ---
     @OneToMany(() => Account, (account) => account.user)

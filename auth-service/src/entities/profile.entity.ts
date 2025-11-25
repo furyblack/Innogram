@@ -9,42 +9,42 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 
-@Entity('profiles')
+@Entity('Profiles')
 export class Profile {
     @PrimaryGeneratedColumn('uuid')
-    id!: string; // <-- Добавлен '!'
+    id!: string;
 
     @OneToOne(() => User, (user) => user.profile, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'user_id' })
-    user!: User; // <-- Добавлен '!'
+    @JoinColumn()
+    user!: User;
 
     @Column({ type: 'uuid', unique: true })
-    user_id!: string; // <-- Добавлен '!'
+    userId!: string;
 
     @Column({ type: 'varchar', length: 50, unique: true })
-    username!: string; // <-- Добавлен '!'
+    userName!: string;
 
     @Column({ type: 'varchar', length: 100 })
-    display_name!: string; // <-- Добавлен '!'
+    displayName!: string;
 
     @Column({ type: 'date' })
-    birthday!: Date; // <-- Добавлен '!'
+    birthday!: Date;
 
     @Column({ type: 'text', nullable: true })
-    bio!: string; // <-- Добавлен '!'
+    bio!: string;
 
     @Column({ type: 'varchar', length: 500, nullable: true })
-    avatar_url!: string; // <-- Добавлен '!'
+    avatarUrl!: string;
 
     @Column({ default: true })
-    is_public!: boolean; // <-- Добавлен '!'
+    isPublic!: boolean;
 
     @Column({ default: false })
-    deleted!: boolean; // <-- Добавлен '!'
+    deleted!: boolean;
 
     @CreateDateColumn({ type: 'timestamp' })
-    created_at!: Date; // <-- Добавлен '!'
+    createdAt!: Date;
 
-    @UpdateDateColumn({ type: 'timestamp' }) // <-- ✅ ОПЕЧАТКА ИСПРАВЛЕНА
-    updated_at!: Date; // <-- Добавлен '!'
+    @UpdateDateColumn({ type: 'timestamp' })
+    updatedAt!: Date;
 }

@@ -6,6 +6,7 @@ import {
     UpdateDateColumn,
     ManyToOne,
     Index,
+    JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 
@@ -15,35 +16,36 @@ export enum AuthProvider {
     GITHUB = 'github',
 }
 
-@Entity('accounts')
+@Entity('Accounts')
 @Index(['email', 'provider'], { unique: true })
 export class Account {
     @PrimaryGeneratedColumn('uuid')
-    id!: string; // <-- Добавлен '!'
+    id!: string;
 
     @Column({ type: 'varchar', unique: true })
-    email!: string; // <-- Добавлен '!'
+    email!: string;
 
     @Column({ type: 'varchar' })
-    password_hash!: string; // <-- Добавлен '!'
+    passwordHash!: string;
 
     @Column({
         type: 'enum',
         enum: AuthProvider,
         default: AuthProvider.LOCAL,
     })
-    provider!: AuthProvider; // <-- Добавлен '!'
+    provider!: AuthProvider;
 
     @CreateDateColumn({ type: 'timestamp' })
-    created_at!: Date; // <-- Добавлен '!'
+    createdAt!: Date;
 
     @UpdateDateColumn({ type: 'timestamp' })
-    updated_at!: Date; // <-- Добавлен '!'
+    updatedAt!: Date;
 
     // Связи
     @ManyToOne(() => User, (user) => user.accounts, { onDelete: 'CASCADE' })
-    user!: User; // <-- Добавлен '!'
+    @JoinColumn()//
+    user!: User;
 
     @Column({ type: 'uuid' })
-    user_id!: string; // <-- Добавлен '!'
+    userId!: string;
 }

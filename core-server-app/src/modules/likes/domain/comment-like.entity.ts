@@ -9,8 +9,8 @@ import {
 import { Profile } from 'src/modules/profiles/domain/profile.entity';
 import { Comment } from 'src/modules/comments/domain/comments.entity';
 
-@Entity('comments_likes')
-@Unique(['comment_id', 'profile_id']) // Уникальная пара
+@Entity('Comments_likes')
+@Unique(['commentId', 'profileId'])
 export class CommentLike {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -18,16 +18,16 @@ export class CommentLike {
   @ManyToOne(() => Profile, (profile) => profile.commentLikes, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'profile_id' })
+  @JoinColumn({ name: 'profileId' })
   profile: Profile;
 
   @Column({ type: 'uuid' })
-  profile_id: string;
+  profileId: string;
 
   @ManyToOne(() => Comment, (comment) => comment.likes, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'comment_id' })
+  @JoinColumn({ name: 'commentId' })
   comment: Comment;
 
   @Column({ type: 'uuid' })
-  comment_id: string;
+  commentId: string;
 }

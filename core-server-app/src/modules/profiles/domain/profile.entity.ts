@@ -14,23 +14,23 @@ import { Comment } from 'src/modules/comments/domain/comments.entity';
 import { PostLike } from 'src/modules/likes/domain/post-like.entity';
 import { CommentLike } from 'src/modules/likes/domain/comment-like.entity';
 
-@Entity('profiles')
+@Entity('Profiles')
 export class Profile {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @OneToOne(() => User, (user) => user.profile, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn()
   user: User;
 
-  @Column({ type: 'uuid', unique: true }) // <-- Добавил unique, как в спеке
-  user_id: string;
+  @Column({ type: 'uuid', unique: true })
+  userId: string;
 
   @Column({ type: 'varchar', length: 50, unique: true })
-  username: string;
+  userName: string;
 
   @Column({ type: 'varchar', length: 100 })
-  display_name: string;
+  displayName: string;
 
   @Column({ type: 'date', nullable: true })
   birthday: Date;
@@ -39,19 +39,19 @@ export class Profile {
   bio: string;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
-  avatar_url: string;
+  avatarUrl: string;
 
   @Column({ default: true })
-  is_public: boolean;
+  isPublic: boolean;
 
   @Column({ default: false })
   deleted: boolean;
 
   @CreateDateColumn({ type: 'timestamp' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
-  updated_at: Date;
+  updatedAt: Date;
 
   // --- Обратные связи ---
   @OneToMany(() => Post, (post) => post.profile)

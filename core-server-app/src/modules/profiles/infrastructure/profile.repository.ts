@@ -13,7 +13,7 @@ export class ProfileRepository {
   // ! ЭТО КЛЮЧЕВОЙ МЕТОД, НУЖНЫЙ ВСЕМ СЕРВИСАМ
   async findByUserId(userId: string): Promise<Profile | null> {
     return this.repo.findOne({
-      where: { user_id: userId },
+      where: { userId },
     });
   }
 
@@ -21,8 +21,8 @@ export class ProfileRepository {
     return this.repo.findOneBy({ id });
   }
 
-  async findByUsername(username: string): Promise<Profile | null> {
-    return this.repo.findOneBy({ username });
+  async findByUsername(userName: string): Promise<Profile | null> {
+    return this.repo.findOneBy({ userName });
   }
 
   // TODO: Добавить методы create, update

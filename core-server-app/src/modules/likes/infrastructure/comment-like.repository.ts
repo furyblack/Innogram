@@ -21,8 +21,8 @@ export class CommentLikeRepository {
   ): Promise<CommentLike | null> {
     return this.repo.findOne({
       where: {
-        profile_id: profileId,
-        comment_id: commentId,
+        profileId: profileId,
+        commentId: commentId,
       },
     });
   }

@@ -1,8 +1,8 @@
 export interface SocialLoginDto {
     email: string;
-    username: string; // Сгенерируем в Core или тут
+    username: string;
     displayName: string;
     provider: 'google' | 'github';
-    providerId: string; // Google ID
+    providerId: string; 
     avatarUrl?: string;
 }
