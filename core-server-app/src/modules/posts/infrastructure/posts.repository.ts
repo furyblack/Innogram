@@ -36,7 +36,21 @@ export class PostsRepository {
     const { page = 1, limit = 10 } = paginationDto;
     const skip = (page - 1) * limit;
     return this.postRepo.find({
-      relations: ['profile', 'comments'], // <-- 'user' ИЗМЕНЕН на 'profile'
+      where: { status: 'published' },
+      relations: ['profile', 'comments'],
+      skip: skip,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findByProfileId(profileId: string, paginationDto: PaginationDto) {
+    const { page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    return this.postRepo.find({
+      where: { profile: { id: profileId } },
+      relations: ['comments'],
       skip: skip,
       take: limit,
       order: { createdAt: 'DESC' },

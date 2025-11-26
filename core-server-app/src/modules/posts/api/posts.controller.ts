@@ -31,6 +31,15 @@ export class PostsController {
     return this.postsService.createPost(userId, dto);
   }
 
+  @Get('my')
+  @UseGuards(AuthGuard('jwt'))
+  async getMyPosts(
+    @CurrentUser('userId') userId: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.postsService.getMyPosts(userId, paginationDto);
+  }
+
   @Get()
   async findAll(@Query() paginationDto: PaginationDto) {
     return this.postsService.findAll(paginationDto);

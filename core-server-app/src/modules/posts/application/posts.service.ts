@@ -63,4 +63,12 @@ export class PostsService {
     }
     return this.postsRepo.removePost(id);
   }
+
+  async getMyPosts(userId: string, paginationDto: PaginationDto) {
+    // <-- ТИП ИЗМЕНЕН
+    const profile = await this.profileRepo.findByUserId(userId);
+    if (!profile) throw new NotFoundException('Profile not found');
+
+    return this.postsRepo.findByProfileId(profile.id, paginationDto);
+  }
 }
