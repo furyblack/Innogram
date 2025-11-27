@@ -117,7 +117,7 @@ export class UserService {
                 // В. Создаем Profile
                 const profileRepo = manager.getRepository(Profile);
                 const newProfile = profileRepo.create({
-                    userName: dto.username,
+                    username: dto.username,
                     displayName: dto.displayName,
                     avatarUrl: dto.avatarUrl,
                     user: user,
@@ -150,7 +150,7 @@ export class UserService {
         }
 
         const existingProfile = await this.profileRepository.findOne({
-            where: { userName: signUpDto.username },
+            where: { username: signUpDto.username },
         });
         if (existingProfile) {
             throw new ConflictError('Username is already taken');
@@ -182,7 +182,7 @@ export class UserService {
                     // 3.3. Создаем Profile
                     const profileRepo = manager.getRepository(Profile);
                     const newProfile = profileRepo.create({
-                        userName: signUpDto.username,
+                        username: signUpDto.username,
                         displayName: signUpDto.display_name,
                         birthday: signUpDto.birthday,
                         user: newUser,

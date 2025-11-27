@@ -13,21 +13,15 @@ import { Post } from 'src/modules/posts/domain/post.entity';
 import { Comment } from 'src/modules/comments/domain/comments.entity';
 import { PostLike } from 'src/modules/likes/domain/post-like.entity';
 import { CommentLike } from 'src/modules/likes/domain/comment-like.entity';
+// import { Follow } from ... (когда добавим подписки)
 
-@Entity('Profiles')
+@Entity('Profiles') // CamelCase стиль таблицы
 export class Profile {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @OneToOne(() => User, (user) => user.profile, { onDelete: 'CASCADE' })
-  @JoinColumn()
-  user: User;
-
-  @Column({ type: 'uuid', unique: true })
-  userId: string;
-
   @Column({ type: 'varchar', length: 50, unique: true })
-  userName: string;
+  username: string;
 
   @Column({ type: 'varchar', length: 100 })
   displayName: string;
@@ -38,14 +32,22 @@ export class Profile {
   @Column({ type: 'text', nullable: true })
   bio: string;
 
-  @Column({ type: 'varchar', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 1000, nullable: true })
   avatarUrl: string;
 
+  // --- Новые поля из требований ---
   @Column({ default: true })
   isPublic: boolean;
 
   @Column({ default: false })
-  deleted: boolean;
+  deleted: boolean; // Для Soft Delete
+
+  // --- Аудит ---
+  @Column({ type: 'uuid', nullable: true })
+  createdBy: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  updatedBy: string;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
@@ -53,7 +55,15 @@ export class Profile {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  // --- Обратные связи ---
+  // --- Связи ---
+  @OneToOne(() => User, (user) => user.profile, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' }) // В базе будет userId (camelCase, как ты любишь)
+  user: User;
+
+  @Column({ type: 'uuid', unique: true })
+  userId: string;
+
+  // Обратные связи
   @OneToMany(() => Post, (post) => post.profile)
   posts: Post[];
 

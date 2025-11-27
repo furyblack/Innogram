@@ -6,7 +6,6 @@ import {
     UpdateDateColumn,
     ManyToOne,
     Index,
-    JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 
@@ -16,17 +15,17 @@ export enum AuthProvider {
     GITHUB = 'github',
 }
 
-@Entity('Accounts')
+@Entity('Accounts') // CamelCase стиль таблицы
 @Index(['email', 'provider'], { unique: true })
 export class Account {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
 
-    @Column({ type: 'varchar', unique: true })
+    @Column({ type: 'varchar' }) // unique убрали из Column, оставили в Index
     email!: string;
 
     @Column({ type: 'varchar' })
-    passwordHash!: string;
+    passwordHash!: string; // CamelCase
 
     @Column({
         type: 'enum',
@@ -35,15 +34,25 @@ export class Account {
     })
     provider!: AuthProvider;
 
+    // --- Новое поле из требований ---
+    @Column({ type: 'timestamp', nullable: true })
+    lastLoginAt!: Date;
+
+    // --- Аудит ---
+    @Column({ type: 'uuid', nullable: true })
+    createdBy!: string;
+
+    @Column({ type: 'uuid', nullable: true })
+    updatedBy!: string;
+
     @CreateDateColumn({ type: 'timestamp' })
     createdAt!: Date;
 
     @UpdateDateColumn({ type: 'timestamp' })
     updatedAt!: Date;
 
-    // Связи
+    // --- Связи ---
     @ManyToOne(() => User, (user) => user.accounts, { onDelete: 'CASCADE' })
-    @JoinColumn()//
     user!: User;
 
     @Column({ type: 'uuid' })

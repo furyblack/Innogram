@@ -6,7 +6,6 @@ import {
   UpdateDateColumn,
   OneToMany,
   OneToOne,
-  JoinColumn,
 } from 'typeorm';
 import { Account } from 'src/modules/accounts/domain/account.entity';
 import { Profile } from 'src/modules/profiles/domain/profile.entity';
@@ -16,7 +15,7 @@ export enum UserRole {
   ADMIN = 'Admin',
 }
 
-@Entity('Users')
+@Entity('Users') // Оставили как ты хотел
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -31,6 +30,14 @@ export class User {
   @Column({ default: false })
   disabled: boolean;
 
+  // --- Новые поля (Аудит) ---
+  @Column({ type: 'uuid', nullable: true })
+  createdBy: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  updatedBy: string;
+
+  // --- Таймстампы ---
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 

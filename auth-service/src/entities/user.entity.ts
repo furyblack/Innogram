@@ -15,7 +15,7 @@ export enum UserRole {
     ADMIN = 'Admin',
 }
 
-@Entity('Users')
+@Entity('Users') // Оставили как ты хотел
 export class User {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
@@ -25,21 +25,29 @@ export class User {
         enum: UserRole,
         default: UserRole.USER,
     })
-    role!: UserRole; 
+    role!: UserRole;
 
     @Column({ default: false })
-    disabled!: boolean; 
+    disabled!: boolean;
 
+    // --- Новые поля (Аудит) ---
+    @Column({ type: 'uuid', nullable: true })
+    createdBy!: string;
+
+    @Column({ type: 'uuid', nullable: true })
+    updatedBy!: string;
+
+    // --- Таймстампы ---
     @CreateDateColumn({ type: 'timestamp' })
-    createdAt!: Date; 
+    createdAt!: Date;
 
     @UpdateDateColumn({ type: 'timestamp' })
-    updatedAt!: Date; 
+    updatedAt!: Date;
 
     // --- Связи ---
     @OneToMany(() => Account, (account) => account.user)
-    accounts!: Account[]; 
+    accounts!: Account[];
 
     @OneToOne(() => Profile, (profile) => profile.user)
-    profile!: Profile; 
+    profile!: Profile;
 }

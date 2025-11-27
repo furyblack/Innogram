@@ -6,9 +6,8 @@ import {
   UpdateDateColumn,
   ManyToOne,
   Index,
-  JoinColumn,
 } from 'typeorm';
-import { User } from '../../users/domain/user.entity';
+import { User } from 'src/modules/users/domain/user.entity';
 
 export enum AuthProvider {
   LOCAL = 'local',
@@ -17,12 +16,12 @@ export enum AuthProvider {
 }
 
 @Entity('Accounts')
-@Index(['email', 'provider'], { unique: true }) //уникальный мейл для провайдера
+@Index(['email', 'provider'], { unique: true })
 export class Account {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', unique: true })
+  @Column({ type: 'varchar' })
   email: string;
 
   @Column({ type: 'varchar' })
@@ -35,16 +34,25 @@ export class Account {
   })
   provider: AuthProvider;
 
+  @Column({ type: 'timestamp', nullable: true })
+  lastLoginAt: Date;
+
+  @Column({ type: 'uuid', nullable: true })
+  createdBy: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  updatedBy: string;
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
+
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
-  @Column({ type: 'uuid' }) // явный FK //
-  userId: string; //
-
-  // Связи
+  // --- Связи ---
   @ManyToOne(() => User, (user) => user.accounts, { onDelete: 'CASCADE' })
-  @JoinColumn()
   user: User;
+
+  @Column({ type: 'uuid' })
+  userId: string;
 }
