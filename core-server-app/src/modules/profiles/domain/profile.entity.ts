@@ -13,7 +13,7 @@ import { Post } from 'src/modules/posts/domain/post.entity';
 import { Comment } from 'src/modules/comments/domain/comments.entity';
 import { PostLike } from 'src/modules/likes/domain/post-like.entity';
 import { CommentLike } from 'src/modules/likes/domain/comment-like.entity';
-// import { Follow } from ... (когда добавим подписки)
+import { Follow } from 'src/modules/follows/domain/follow.entity';
 
 @Entity('Profiles') // CamelCase стиль таблицы
 export class Profile {
@@ -75,4 +75,12 @@ export class Profile {
 
   @OneToMany(() => CommentLike, (like) => like.profile)
   commentLikes: CommentLike[];
+
+  // На кого я подписан
+  @OneToMany(() => Follow, (follow) => follow.follower)
+  following: Follow[];
+
+  // Кто подписан на меня
+  @OneToMany(() => Follow, (follow) => follow.following)
+  followers: Follow[];
 }

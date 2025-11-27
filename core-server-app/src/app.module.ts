@@ -12,6 +12,8 @@ import { AccountsModule } from './modules/accounts/accounts.module'; // <-- ДО
 import { ProfilesModule } from './modules/profiles/profile.module'; // <-- ДОБАВЛЕНО
 import { ChatsModule } from './modules/chat/chat.module';
 import { MessagesModule } from './modules/messages/messages.module';
+import { Follow } from './modules/follows/domain/follow.entity';
+import { FollowsModule } from './modules/follows/follows.module';
 
 @Module({
   imports: [
@@ -45,6 +47,7 @@ import { MessagesModule } from './modules/messages/messages.module';
     CommentsModule,
     ChatsModule,
     MessagesModule,
+    FollowsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

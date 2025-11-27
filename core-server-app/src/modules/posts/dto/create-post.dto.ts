@@ -11,5 +11,5 @@ export class CreatePostDto {
 
   @IsString()
   @IsOptional()
-  status?: string = 'draft'; // например draft / published
+  status?: string = 'published';
 }

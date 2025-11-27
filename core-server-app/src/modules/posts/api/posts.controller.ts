@@ -31,6 +31,32 @@ export class PostsController {
     return this.postsService.createPost(userId, dto);
   }
 
+  @Get('liked')
+  @UseGuards(AuthGuard('jwt'))
+  async getLiked(
+    @CurrentUser('userId') userId: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.postsService.getLikedPosts(userId, paginationDto);
+  }
+
+  @Get('commented')
+  @UseGuards(AuthGuard('jwt'))
+  async getCommented(
+    @CurrentUser('userId') userId: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.postsService.getCommentedPosts(userId, paginationDto);
+  }
+
+  @Get('feed')
+  async getFeed(
+    @CurrentUser('userId') userId: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.postsService.getFeed(userId, paginationDto);
+  }
+
   @Get('my')
   @UseGuards(AuthGuard('jwt'))
   async getMyPosts(
