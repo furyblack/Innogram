@@ -8,12 +8,12 @@ import { UsersModule } from './modules/users/user.module';
 import { PostsModule } from './modules/posts/post.module';
 import { AuthModule } from './auth/auth.module';
 import { LikesModule } from './modules/likes/likes.module';
-import { AccountsModule } from './modules/accounts/accounts.module'; // <-- ДОБАВЛЕНО
-import { ProfilesModule } from './modules/profiles/profile.module'; // <-- ДОБАВЛЕНО
+import { AccountsModule } from './modules/accounts/accounts.module';
+import { ProfilesModule } from './modules/profiles/profile.module';
 import { ChatsModule } from './modules/chat/chat.module';
 import { MessagesModule } from './modules/messages/messages.module';
-import { Follow } from './modules/follows/domain/follow.entity';
 import { FollowsModule } from './modules/follows/follows.module';
+import { AssetsModule } from './modules/assets/assets.module';
 
 @Module({
   imports: [
@@ -40,14 +40,15 @@ import { FollowsModule } from './modules/follows/follows.module';
     }),
     AuthModule,
     UsersModule,
-    AccountsModule, // <-- ДОБАВЛЕНО
-    ProfilesModule, // <-- ДОБАВЛЕНО
+    AccountsModule,
+    ProfilesModule,
     PostsModule,
     LikesModule,
     CommentsModule,
     ChatsModule,
     MessagesModule,
     FollowsModule,
+    AssetsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

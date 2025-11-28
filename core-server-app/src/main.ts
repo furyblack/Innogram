@@ -3,10 +3,12 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import * as dotenv from 'dotenv';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
+import { join } from 'path';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
   dotenv.config();
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // глобальные пайпы для валидации DTO
   app.useGlobalPipes(
@@ -21,6 +23,11 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   app.use(cookieParser());
+
+  // Раздача статических файлов из папки uploads
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   // включаем CORS
   app.enableCors({
