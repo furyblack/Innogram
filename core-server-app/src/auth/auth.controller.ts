@@ -1,3 +1,4 @@
+import { UsersService } from './../modules/users/application/users.service';
 import {
   Controller,
   Post,
@@ -17,7 +18,10 @@ import { CurrentUser } from 'src/modules/users/decorators/current-user';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly coreAuthService: CoreAuthService) {}
+  constructor(
+    private readonly coreAuthService: CoreAuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post('signup')
   async signUp(
@@ -107,5 +111,11 @@ export class AuthController {
     res.clearCookie('refresh_token', { path: '/auth/refresh' }); // Путь важен, если он был задан при создании
 
     return { message: 'Logged out successfully' };
+  }
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+  async getMe(@CurrentUser('userId') userId: string) {
+    const user = await this.usersService.getUserById(userId);
+    return user;
   }
 }
