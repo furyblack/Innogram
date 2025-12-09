@@ -1,0 +1,21 @@
+meta {
+  name: update comment
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{base_core_server}}/api/comments/{{commentId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "content": "Я передумал, это обновленный текст!"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

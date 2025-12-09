@@ -1,0 +1,15 @@
+meta {
+  name: get post by id
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{base_core_server}}/api/posts/{{postId}}
+  body: none
+  auth: none
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,22 @@
+meta {
+  name: create chat
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_core_server}}/api/chats/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Название чата",
+    "type": "group"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

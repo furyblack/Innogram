@@ -1,0 +1,21 @@
+meta {
+  name: delete comment
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{base_core_server}}/api/comments/618c9cbc-3749-4337-84e5-836cd5c307e5
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "content": "Я передумал, это обновленный текст!"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

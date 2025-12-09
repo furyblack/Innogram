@@ -1,0 +1,15 @@
+meta {
+  name: get posts
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_core_server}}/api/posts/
+  body: none
+  auth: none
+}
+
+settings {
+  encodeUrl: true
+}

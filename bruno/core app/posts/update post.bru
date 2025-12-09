@@ -1,0 +1,23 @@
+meta {
+  name: update post
+  type: http
+  seq: 8
+}
+
+patch {
+  url: {{base_core_server}}/api/posts/2edbd7b6-afb6-4af9-ba93-cd3e7e8332ac
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "title": " обновленный Пост для теста лайков",
+    "content": "Проверяем, как работает система лайков.",
+    "status":"updated once"
+  }
+}
+
+settings {
+  encodeUrl: true
+}
