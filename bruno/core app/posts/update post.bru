@@ -5,7 +5,7 @@ meta {
 }
 
 patch {
-  url: {{base_core_server}}/api/posts/2edbd7b6-afb6-4af9-ba93-cd3e7e8332ac
+  url: {{base_core_server}}/api/posts/{{postId}}
   body: json
   auth: inherit
 }
@@ -20,4 +20,5 @@ body:json {
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

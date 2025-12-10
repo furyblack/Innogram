@@ -1,0 +1,26 @@
+meta {
+  name: refresh
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_core_server}}/api/auth/signup
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "misha@example.com",
+    "password": "Qwerty123!",
+    "username": "misha",
+    "display_name": "Vasiliy Ivanich",
+    "birthday": "1999-01-01"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
