@@ -4,13 +4,11 @@ import { UserService } from './user.service';
 export class UserController {
     public static async register(req: Request, res: Response): Promise<void> {
         try {
-            
             const { accessToken, refreshToken } =
                 await UserService.registerUser(req.body);
             res.status(201).json({ accessToken, refreshToken });
         } catch (error) {
-            
-            const status = error.status || 400; 
+            const status = error.status || 400;
             res.status(status).json({ error: error.message });
         }
     }
@@ -22,7 +20,7 @@ export class UserController {
             );
             res.status(200).json({ accessToken, refreshToken });
         } catch (error) {
-            const status = error.status || 401; 
+            const status = error.status || 401;
             res.status(status).json({ error: error.message });
         }
     }
@@ -47,13 +45,34 @@ export class UserController {
 
     public static async logout(req: Request, res: Response): Promise<void> {
         try {
-        
             const { userId } = req.body;
 
             await UserService.logout(userId);
             res.sendStatus(200);
         } catch (error) {
             res.status(500).json({ error: 'Logout failed' });
+        }
+    }
+
+    public static async refresh(req: Request, res: Response): Promise<void> {
+        try {
+            const { refreshToken } = req.body;
+
+            if (!refreshToken) {
+                res.status(400).json({ error: 'Refresh token is required' });
+                return;
+            }
+
+            // Вызываем сервис (который напишем ниже)
+            const tokens = await UserService.refresh(refreshToken);
+
+            res.status(200).json(tokens);
+        } catch (error) {
+            // Если токен невалиден или протух — возвращаем 401
+            const status = error.status || 401;
+            res.status(status).json({
+                error: error.message || 'Refresh failed',
+            });
         }
     }
 }

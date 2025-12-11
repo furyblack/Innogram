@@ -10,16 +10,14 @@ async function bootstrap() {
   dotenv.config();
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // глобальные пайпы для валидации DTO
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // убираем лишние поля
-      forbidNonWhitelisted: true, // кидаем ошибку если пришло лишнее поле
-      transform: true, // преобразуем типы
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
     }),
   );
 
-  // глобальный префикс для API
   app.setGlobalPrefix('api');
 
   app.use(cookieParser());

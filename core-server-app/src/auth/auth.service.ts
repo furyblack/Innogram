@@ -96,5 +96,25 @@ export class CoreAuthService {
       console.error('Error calling auth-service logout:', error.message);
     }
   }
-  // ...
+
+  async refresh(oldRefreshToken: string): Promise<AuthTokens> {
+    try {
+      // Шлем запрос в Auth Service: POST /api/auth/refresh
+      // Передаем старый токен в теле запроса
+      const response = await firstValueFrom(
+        this.httpService.post<AuthTokens>(
+          `${this.authServiceUrl}/api/auth/refresh`,
+          { refreshToken: oldRefreshToken },
+        ),
+      );
+      return response.data;
+    } catch (error) {
+      // Если Auth Service вернул ошибку (например, токен протух или в черном списке)
+      // Мы должны выбросить 401, чтобы клиент понял, что надо релогиниться
+      throw new HttpException(
+        error.response?.data || 'Refresh failed',
+        error.response?.status || 401,
+      );
+    }
+  }
 }

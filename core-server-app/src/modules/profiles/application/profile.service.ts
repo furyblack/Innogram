@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ProfileRepository } from '../infrastructure/profile.repository';
 import { Profile } from '../domain/profile.entity';
-// import { UpdateProfileDto } from '../dto/update-profile.dto'; // TODO
+import { UpdateProfileDto } from '../dto/update-profile.dto';
 
 @Injectable()
 export class ProfileService {
@@ -22,9 +22,16 @@ export class ProfileService {
     return profile;
   }
 
-  // async updateProfile(userId: string, dto: UpdateProfileDto): Promise<Profile> {
-  //   const profile = await this.getProfileByUserId(userId);
-  //   // ... логика обновления
-  //   // ... await this.profileRepo.update(profile.id, dto);
-  // }
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    const profile = await this.profileRepo.findByUserId(userId);
+    if (!profile) throw new NotFoundException('Profile not found');
+
+    // Обновляем поля, если они пришли
+    if (dto.displayName) profile.displayName = dto.displayName;
+    if (dto.bio) profile.bio = dto.bio;
+    if (dto.avatarUrl) profile.avatarUrl = dto.avatarUrl;
+
+    // Сохраняем (TypeORM сам поймет, что это update, т.к. есть id)
+    return this.profileRepo.save(profile);
+  }
 }

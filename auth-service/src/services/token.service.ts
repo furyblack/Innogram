@@ -1,7 +1,7 @@
 import * as jwt from 'jsonwebtoken';
 import * as dotenv from 'dotenv';
-import { redisClient } from '../redis'; 
-import { v4 as uuidv4 } from 'uuid'; 
+import { v4 as uuidv4 } from 'uuid';
+import { redisClient } from '../utils/redis-client';
 
 dotenv.config();
 
@@ -10,11 +10,10 @@ const REFRESH_SECRET =
     process.env.JWT_REFRESH_SECRET || 'your_refresh_secret_key';
 
 interface TokenPayload {
-    userId: string; 
+    userId: string;
 }
 
 class TokenService {
-    
     generateTokens(payload: TokenPayload) {
         const accessToken = jwt.sign(payload, ACCESS_SECRET, {
             expiresIn: '15m',
@@ -25,15 +24,15 @@ class TokenService {
         return { accessToken, refreshToken };
     }
 
-
     async saveRefreshToken(
         userId: string,
         refreshToken: string
     ): Promise<void> {
-        
+        console.log(`[DEBUG Save] Сохраняю токен для юзера: ${userId}`);
+        console.log(`[DEBUG Save] Ключ сохранения: refresh_token:${userId}`);
         try {
             await redisClient.set(`refresh_tokens:${userId}`, refreshToken, {
-                EX: 30 * 24 * 60 * 60, 
+                EX: 30 * 24 * 60 * 60,
             });
         } catch (e) {
             console.error('Failed to save token to Redis', e);
@@ -47,7 +46,6 @@ class TokenService {
             console.error('Failed to remove token from Redis', e);
         }
     }
- 
 }
 
 export const tokenService = new TokenService();

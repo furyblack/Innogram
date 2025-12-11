@@ -30,5 +30,6 @@ router.post(
 router.post('/social-login', UserController.socialLogin);
 
 router.post('/logout', UserController.logout);
+router.post('/refresh', UserController.refresh);
 
 export default router;

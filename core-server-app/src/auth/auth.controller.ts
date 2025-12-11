@@ -8,8 +8,9 @@ import {
   UseGuards,
   Get,
   HttpCode,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { Request, type Response } from 'express';
+import type { Request, Response } from 'express';
 import { CoreAuthService } from './auth.service';
 import { SignUpDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
@@ -40,7 +41,6 @@ export class AuthController {
       httpOnly: true,
       secure: false,
       sameSite: 'strict',
-      path: '/auth/refresh',
     });
 
     return { message: 'Registration successful 1111' };
@@ -63,7 +63,6 @@ export class AuthController {
       httpOnly: true,
       secure: false,
       sameSite: 'strict',
-      path: '/auth/refresh',
     });
 
     return { message: 'Login successful' };
@@ -90,10 +89,41 @@ export class AuthController {
       httpOnly: true,
       secure: false,
       sameSite: 'strict',
-      path: '/auth/refresh',
     });
 
     return res.send({ message: 'Google Login Successful' });
+  }
+
+  @Post('refresh')
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    // Если TS все равно ругается на cookies, используй (req as any).cookies
+    const oldRefreshToken = req.cookies['refresh_token'];
+
+    if (!oldRefreshToken) {
+      // 2. Исправлено: бросаем правильное исключение
+      throw new UnauthorizedException('No refresh token provided');
+    }
+
+    const { accessToken, refreshToken } =
+      await this.coreAuthService.refresh(oldRefreshToken);
+
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'strict',
+    });
+
+    // Не забываем путь path: '/auth/refresh'
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'strict',
+    });
+
+    return { message: 'Tokens refreshed successfully' };
   }
 
   @Post('logout')

@@ -1,3 +1,4 @@
+import * as jwt from 'jsonwebtoken';
 import { AppDataSource } from '../db';
 import { User } from '../entities/user.entity';
 import { Account, AuthProvider } from '../entities/account.entity';
@@ -7,6 +8,8 @@ import { Repository, EntityManager } from 'typeorm';
 import { tokenService } from '../services/token.service';
 import { SocialLoginDto } from './dto/social-login.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { ApiError } from '../utils/api-error';
+import { redisClient } from '../utils/redis-client';
 
 class ConflictError extends Error {
     public status: number;
@@ -255,5 +258,61 @@ export class UserService {
     public static async logout(userId: string): Promise<void> {
         // Удаляем токен из Redis
         await tokenService.removeRefreshToken(userId);
+    }
+
+    public static async refresh(
+        oldRefreshToken: string
+    ): Promise<{ accessToken: string; refreshToken: string }> {
+        try {
+            // 1. Проверяем подпись токена (жив ли он криптографически)
+            const payload: any = jwt.verify(
+                oldRefreshToken,
+                process.env.JWT_REFRESH_SECRET || 'refresh_secret' // Твой секрет
+            );
+
+            // payload.id — это userId
+            const userId = payload.userId;
+
+            // 2. Проверяем, есть ли этот токен в Redis (белый список сессий)
+            // Ключ в Redis должен совпадать с тем, как ты его сохранял при логине!
+            // Обычно это: refresh_token:{userId}
+
+            console.log(`[DEBUG Refresh] Ищу токен для юзера: ${userId}`);
+            console.log(`[DEBUG Refresh] Ключ поиска: refresh_token:${userId}`);
+            const storedToken = await redisClient.get(
+                `refresh_tokens:${userId}`
+            );
+            console.log(`[DEBUG Refresh] Найдено в Redis:`, storedToken);
+            if (!storedToken) {
+                throw ApiError.unauthorized('Session expired or invalid');
+            }
+
+            // 3. Сравниваем присланный токен с тем, что в базе
+            // (Защита от кражи: если токены разные, значит кто-то уже использовал рефреш)
+            if (storedToken !== oldRefreshToken) {
+                throw ApiError.forbidden('Token mismatch (Reuse detection)');
+            }
+
+            // 4. Генерируем НОВУЮ пару токенов через TokenService
+            // Это гарантирует, что payload будет { userId: ... } как при логине
+            const tokens = tokenService.generateTokens({ userId: userId });
+
+            // 5. Обновляем токен в Redis
+            // Перезаписываем старый токен новым
+            await redisClient.set(
+                `refresh_tokens:${userId}`,
+                tokens.refreshToken,
+                { EX: 30 * 24 * 60 * 60 } // Добавим TTL как в TokenService
+            );
+
+            return tokens;
+        } catch (error) {
+            console.error('Refresh error:', error);
+            // Если ошибка уже наша ApiError — пробрасываем её дальше
+            if (error instanceof ApiError) throw error;
+
+            // Иначе (например ошибка JWT Verify)
+            throw ApiError.unauthorized('Invalid refresh token');
+        }
     }
 }

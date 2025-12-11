@@ -13,32 +13,32 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className="p-5 font-sans bg-gray-50 text-black">
-                {/* Меню навигации */}
-                <nav className="mb-5 p-4 bg-white shadow rounded flex gap-5 items-center">
-                    <b className="text-xl">📸 Innogram UI</b>
+            {/* text-gray-900 (почти черный) вместо дефолтного */}
+            <body className="p-5 font-sans bg-gray-100 text-gray-900">
+                {/* Меню: bg-white, текст темный */}
+                <nav className="mb-5 p-4 bg-white shadow rounded flex gap-5 items-center border border-gray-300">
+                    <b className="text-xl text-black">📸 Innogram UI</b>
                     <Link
                         href="/auth"
-                        className="text-blue-600 hover:underline"
+                        className="text-blue-700 font-medium hover:underline"
                     >
                         Auth
                     </Link>
                     <Link
                         href="/profile"
-                        className="text-blue-600 hover:underline"
+                        className="text-blue-700 font-medium hover:underline"
                     >
                         Profile
                     </Link>
                     <Link
                         href="/feed"
-                        className="text-blue-600 hover:underline"
+                        className="text-blue-700 font-medium hover:underline"
                     >
                         Feed
                     </Link>
                 </nav>
 
-                {/* Контент страницы */}
-                <main className="bg-white p-5 rounded shadow min-h-[500px]">
+                <main className="bg-white p-5 rounded shadow min-h-[500px] border border-gray-300">
                     {children}
                 </main>
             </body>

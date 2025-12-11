@@ -23,4 +23,7 @@ export class ProfileRepository {
   async findByUsername(username: string): Promise<Profile | null> {
     return this.repo.findOneBy({ username });
   }
+  async save(profile: Profile): Promise<Profile> {
+    return this.repo.save(profile);
+  }
 }

@@ -127,11 +127,15 @@ export default function ProfilePage() {
                 </div>
 
                 {/* ИНФОРМАЦИЯ */}
-                <div className="text-center w-full mt-4 border-t pt-4">
-                    <h2 className="text-xl font-bold">{profile.displayName}</h2>
-                    <p className="text-gray-500">@{profile.username}</p>
+                <div className="text-center w-full mt-4 border-t border-gray-300 pt-4">
+                    <h2 className="text-xl font-bold text-black">
+                        {profile.displayName}
+                    </h2>
+                    <p className="text-gray-700 font-medium">
+                        @{profile.username}
+                    </p>
                     {profile.bio && (
-                        <p className="mt-2 text-gray-700 italic">
+                        <p className="mt-2 text-gray-800 italic">
                             {profile.bio}
                         </p>
                     )}
