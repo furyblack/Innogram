@@ -1,63 +1,100 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import PostCard from '../components/PostCard'; // Убедись, что путь верный
+import Link from 'next/link';
 
-// 1. Описываем минимальный интерфейс поста, чтобы не использовать any
-interface Post {
+// 1. ОПИСЫВАЕМ ТИПЫ (Чтобы не было any)
+interface AuthorProfile {
+    username: string;
+    displayName: string;
+    avatarUrl?: string;
+}
+
+interface Author {
     id: string;
-    title?: string;
+    profile?: AuthorProfile;
+}
+
+export interface Post {
+    id: string;
+    title: string;
     content: string;
-    profile?: {
-        id: string;
-    };
+    likesCount: number;
+    imageUrl?: string;
+    author: Author;
+    createdAt: string;
 }
 
 export default function FeedPage() {
-    // 2. Используем этот тип в useState
+    // 2. Используем тип Post[] вместо any[]
     const [posts, setPosts] = useState<Post[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const loadFeed = async () => {
-        // Стучимся на /api/posts/feed -> Прокси перешлет на Core Service
-        const res = await fetch('/api/posts/feed');
-        if (res.ok) {
-            const data = await res.json();
-            setPosts(data);
-        } else {
-            alert('Error loading feed (Not authorized?)');
+    // 3. ИСПРАВЛЕННЫЙ useEffect
+    useEffect(() => {
+        // Объявляем функцию ВНУТРИ эффекта
+        const fetchFeed = async () => {
+            try {
+                const res = await fetch('/api/posts?page=1&limit=20');
+                if (res.ok) {
+                    const data = await res.json();
+                    // Учитываем, что бэк может вернуть { items: [], meta: {} } или просто []
+                    setPosts(data.items || data);
+                }
+            } catch (e) {
+                console.error('Failed to load feed', e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchFeed();
+    }, []); // Пустой массив зависимостей = запуск 1 раз при старте
+
+    // Функция для кнопки Refresh (вынесли отдельно от useEffect)
+    const handleRefresh = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch('/api/posts?page=1&limit=20');
+            if (res.ok) {
+                const data = await res.json();
+                setPosts(data.items || data);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div>
-            <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-bold">Your Feed</h1>
-                <button
-                    onClick={loadFeed}
-                    className="bg-green-600 text-white px-4 py-2 rounded"
+        <div className="max-w-2xl mx-auto">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold text-black">News Feed</h1>
+                <Link
+                    href="/posts/create"
+                    className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-medium"
                 >
-                    🔄 Load Posts
-                </button>
+                    + New Post
+                </Link>
             </div>
 
-            <div className="flex flex-col gap-4">
-                {posts.length === 0 && (
-                    <p className="text-gray-500">
-                        No posts loaded or feed is empty.
-                    </p>
-                )}
+            <button
+                onClick={handleRefresh}
+                className="mb-4 text-blue-600 hover:text-blue-800 underline text-sm font-medium"
+            >
+                Refresh
+            </button>
 
-                {posts.map((post) => (
-                    <div
-                        key={post.id}
-                        className="border p-4 rounded bg-gray-50"
-                    >
-                        <h3 className="font-bold text-lg">{post.title}</h3>
-                        <p>{post.content}</p>
-                        <div className="text-sm text-gray-400 mt-2">
-                            Author ID: {post.profile?.id}
-                        </div>
-                    </div>
-                ))}
-            </div>
+            {loading && <p className="text-gray-600">Loading posts...</p>}
+
+            {!loading && posts.length === 0 && (
+                <p className="text-gray-600">No posts found.</p>
+            )}
+
+            {posts.map((post) => (
+                <PostCard key={post.id} post={post} />
+            ))}
         </div>
     );
 }

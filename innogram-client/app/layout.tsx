@@ -36,6 +36,12 @@ export default function RootLayout({
                     >
                         Feed
                     </Link>
+                    <Link
+                        href="/users/explore"
+                        className="text-blue-700 font-medium hover:underline"
+                    >
+                        Explore
+                    </Link>
                 </nav>
 
                 <main className="bg-white p-5 rounded shadow min-h-[500px] border border-gray-300">
