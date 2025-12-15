@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
-// Импортируем тип Post из feed page или описываем заново
-// (Лучше вынести типы в отдельный файл types.ts, но пока опишем тут для простоты)
+import Link from 'next/link';
+import { Post } from '../types';
 
 interface Comment {
     id: string;
@@ -15,31 +15,17 @@ interface Comment {
     };
 }
 
-// Типизируем пропсы компонента
 interface PostProps {
-    post: {
-        id: string;
-        title: string;
-        content: string;
-        imageUrl?: string;
-        likesCount: number;
-        author: {
-            profile?: {
-                username: string;
-                displayName: string;
-                avatarUrl?: string;
-            };
-        };
-    };
+    post: Post; // <--- Используем общий тип
+    isMyPost?: boolean;
+    onDelete?: (id: string) => void;
 }
 
-export default function PostCard({ post }: PostProps) {
+export default function PostCard({ post, isMyPost, onDelete }: PostProps) {
     const [likes, setLikes] = useState(post.likesCount || 0);
     const [isLiked, setIsLiked] = useState(false);
     const [showComments, setShowComments] = useState(false);
     const [commentText, setCommentText] = useState('');
-
-    // Типизируем список комментариев
     const [commentsList, setCommentsList] = useState<Comment[]>([]);
 
     // --- ЛАЙКИ ---
@@ -53,6 +39,27 @@ export default function PostCard({ post }: PostProps) {
             }
         } catch (e) {
             console.error(e);
+        }
+    };
+
+    const handleDelete = async () => {
+        // Спрашиваем подтверждение
+        if (!confirm('Are you sure you want to delete this post?')) return;
+
+        try {
+            const res = await fetch(`/api/posts/${post.id}`, {
+                method: 'DELETE',
+            });
+            if (res.ok) {
+                alert('Deleted!');
+                // Если родитель передал функцию onDelete, вызываем её, чтобы убрать пост из списка
+                if (onDelete) onDelete(post.id);
+            } else {
+                alert('Failed to delete');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Network error');
         }
     };
 
@@ -100,31 +107,47 @@ export default function PostCard({ post }: PostProps) {
     return (
         <div className="border border-gray-300 rounded bg-white mb-6 shadow-sm overflow-hidden">
             {/* HEADER */}
-            <div className="p-4 border-b border-gray-200 flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden border border-gray-300">
-                    {post.author?.profile?.avatarUrl ? (
-                        <img
-                            src={post.author.profile.avatarUrl}
-                            className="w-full h-full object-cover"
-                            alt="avatar"
-                        />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold">
-                            ?
-                        </div>
-                    )}
-                </div>
-                <div>
-                    <p className="font-bold text-sm text-black">
-                        {post.author?.profile?.displayName || 'Unknown'}
-                    </p>
-                    <p className="text-xs text-gray-600">
-                        @{post.author?.profile?.username || 'user'}
-                    </p>
-                </div>
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                {/* Ссылка на профиль автора */}
+                <Link
+                    href={`/users/${post.profile.username}`}
+                    className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-1 rounded transition"
+                >
+                    <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden border border-gray-300">
+                        {post.profile.avatarUrl ? (
+                            <img
+                                src={post.profile?.avatarUrl}
+                                className="w-full h-full object-cover"
+                                alt="avatar"
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold">
+                                ?
+                            </div>
+                        )}
+                    </div>
+                    <div>
+                        <p className="font-bold text-sm text-black">
+                            {post.profile?.displayName || 'Unknown'}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                            @{post.profile?.username || 'user'}
+                        </p>
+                    </div>
+                </Link>
+
+                {/* Кнопка удаления (показываем, если передан флаг isMyPost) */}
+                {isMyPost && (
+                    <button
+                        onClick={handleDelete}
+                        className="text-red-500 text-xs border border-red-200 p-1 rounded hover:bg-red-50"
+                    >
+                        🗑 Delete
+                    </button>
+                )}
             </div>
 
-            {/* CONTENT */}
+            {/* ... CONTENT (title, content, image) ... */}
             <div className="p-4">
                 <h3 className="font-bold text-lg text-black mb-2">
                     {post.title}

@@ -12,4 +12,8 @@ export class CreatePostDto {
   @IsString()
   @IsOptional()
   status?: string = 'published';
+
+  @IsString()
+  @IsOptional()
+  imageUrl?: string;
 }

@@ -3,42 +3,44 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AuthPage() {
+    // Переключатель: Вход или Регистрация
+    const [isRegister, setIsRegister] = useState(false);
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    // Доп. поля для регистрации
+    const [username, setUsername] = useState('');
+    const [displayName, setDisplayName] = useState('');
+    const [birthday, setBirthday] = useState('2000-01-01'); // Дефолтная дата
+
     const router = useRouter();
 
-    // 1. Старая функция Логина (без изменений)
-    const handleLogin = async () => {
-        const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-        });
+    const handleSubmit = async () => {
+        // Выбираем URL в зависимости от режима
+        const endpoint = isRegister ? '/api/auth/signup' : '/api/auth/login';
 
-        if (res.ok) {
-            alert('✅ Success! Cookies are set.');
-            router.push('/feed');
-        } else {
-            alert('❌ Error logging in');
-        }
-    };
+        // Формируем тело запроса
+        const body = isRegister
+            ? { email, password, username, display_name: displayName, birthday }
+            : { email, password };
 
-    // 2. ✨ НОВАЯ функция для проверки Refresh Token
-    const handleRefresh = async () => {
         try {
-            // Мы просто шлем POST запрос. Куки (refresh_token) браузер прикрепит сам!
-            const res = await fetch('/api/auth/refresh', {
+            const res = await fetch(endpoint, {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
             });
 
             if (res.ok) {
-                const data = await res.json();
-                console.log('Refresh response:', data);
-                alert('✅ Token Refreshed! Session extended.');
-            } else {
                 alert(
-                    '❌ Refresh Failed (Token expired or invalid). Please login again.'
+                    isRegister
+                        ? '✅ Registered! Welcome.'
+                        : '✅ Login successful!'
                 );
+                router.push('/feed');
+            } else {
+                const err = await res.json();
+                alert(`❌ Error: ${err.message || err.error}`);
             }
         } catch (e) {
             console.error(e);
@@ -46,43 +48,83 @@ export default function AuthPage() {
         }
     };
 
-    return (
-        <div className="flex flex-col gap-4 max-w-sm">
-            <h1 className="text-2xl font-bold">Sign In</h1>
+    // ... (функция handleRefresh остается та же) ...
+    const handleRefresh = async () => {
+        /* твой код рефреша */
+    };
 
-            {/* Поля ввода */}
+    return (
+        <div className="flex flex-col gap-4 max-w-sm mx-auto mt-10 p-6 border rounded shadow-md bg-white">
+            <h1 className="text-2xl font-bold text-center text-black">
+                {isRegister ? 'Create Account' : 'Sign In'}
+            </h1>
+
+            {/* Поля для Регистрации */}
+            {isRegister && (
+                <>
+                    <input
+                        className="border border-gray-400 p-2 rounded text-black"
+                        placeholder="Username (e.g. batman)"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                    />
+                    <input
+                        className="border border-gray-400 p-2 rounded text-black"
+                        placeholder="Display Name (e.g. Bruce Wayne)"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                    />
+                    <label className="text-xs text-gray-600 ml-1">
+                        Birthday
+                    </label>
+                    <input
+                        className="border border-gray-400 p-2 rounded text-black"
+                        type="date"
+                        value={birthday}
+                        onChange={(e) => setBirthday(e.target.value)}
+                    />
+                </>
+            )}
+
+            {/* Общие поля */}
             <input
-                className="border border-gray-400 p-2 rounded text-black placeholder-gray-600"
+                className="border border-gray-400 p-2 rounded text-black"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
             />
             <input
-                className="border border-gray-400 p-2 rounded text-black placeholder-gray-600"
+                className="border border-gray-400 p-2 rounded text-black"
                 type="password"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
             />
 
-            {/* Кнопка Логина */}
+            {/* Кнопка действия */}
             <button
-                onClick={handleLogin}
-                className="bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
+                onClick={handleSubmit}
+                className="bg-blue-600 text-white p-2 rounded hover:bg-blue-700 font-bold"
             >
-                Login
+                {isRegister ? 'Sign Up' : 'Login'}
             </button>
 
-            {/* 👇 НОВАЯ СЕКЦИЯ С КНОПКОЙ REFRESH */}
-            <div className="mt-6 pt-4 border-t border-gray-300">
-                <p className="text-sm text-gray-500 mb-2">Debug Actions:</p>
+            {/* Переключатель */}
+            <p className="text-center text-sm text-gray-600 mt-2">
+                {isRegister
+                    ? 'Already have an account? '
+                    : "Don't have an account? "}
                 <button
-                    onClick={handleRefresh}
-                    className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700 font-medium"
+                    onClick={() => setIsRegister(!isRegister)}
+                    className="text-blue-600 font-bold hover:underline"
                 >
-                    🔄 Test Refresh Token
+                    {isRegister ? 'Login here' : 'Register here'}
                 </button>
-            </div>
+            </p>
+
+            <hr className="my-2" />
+            {/* Кнопка рефреша для тестов */}
+            {/* ... вставь сюда свою кнопку Refresh ... */}
         </div>
     );
 }

@@ -48,7 +48,7 @@ export class PostsRepository {
 
     return this.postRepo.find({
       where: { profile: { id: profileId } },
-      relations: ['comments'],
+      relations: ['comments', 'profile'],
       skip: skip,
       take: limit,
       order: { createdAt: 'DESC' },

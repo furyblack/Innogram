@@ -37,6 +37,12 @@ export default function RootLayout({
                         Feed
                     </Link>
                     <Link
+                        href="/posts/my"
+                        className="text-blue-600 font-medium hover:underline"
+                    >
+                        My Posts
+                    </Link>
+                    <Link
                         href="/users/explore"
                         className="text-blue-700 font-medium hover:underline"
                     >

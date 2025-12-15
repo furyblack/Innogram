@@ -24,9 +24,11 @@ export default function CreatePostPage() {
             });
             if (res.ok) {
                 const data = await res.json();
+                console.log('Upload response:', data);
                 // Сохраняем URL, чтобы показать превью и потом отправить на бэк
                 // (Зависит от того, принимает ли твой CreatePostDto поле imageUrl или assetId)
-                setImageUrl(data.url);
+                const serverPath = data.url || data.path || data.filename;
+                setImageUrl(serverPath);
             } else {
                 alert('Failed to upload image');
             }
@@ -47,10 +49,7 @@ export default function CreatePostPage() {
                 body: JSON.stringify({
                     title,
                     content,
-                    // Если твой DTO поддерживает картинки, добавь поле здесь.
-                    // Например: imageUrl: imageUrl
-                    // Или если картинки нет в DTO, можно временно добавить ссылку в текст:
-                    // content: `${content} \n\n ![image](${imageUrl})`
+                    imageUrl,
                 }),
             });
 

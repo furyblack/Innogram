@@ -32,6 +32,9 @@ export class Post {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
+  @Column({ nullable: true })
+  imageUrl: string;
+
   // --- Связи ---
   @ManyToOne(() => Profile, (profile) => profile.posts, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'profileId' })

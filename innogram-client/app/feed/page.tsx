@@ -2,28 +2,7 @@
 import { useState, useEffect } from 'react';
 import PostCard from '../components/PostCard'; // Убедись, что путь верный
 import Link from 'next/link';
-
-// 1. ОПИСЫВАЕМ ТИПЫ (Чтобы не было any)
-interface AuthorProfile {
-    username: string;
-    displayName: string;
-    avatarUrl?: string;
-}
-
-interface Author {
-    id: string;
-    profile?: AuthorProfile;
-}
-
-export interface Post {
-    id: string;
-    title: string;
-    content: string;
-    likesCount: number;
-    imageUrl?: string;
-    author: Author;
-    createdAt: string;
-}
+import { Post } from '../types';
 
 export default function FeedPage() {
     // 2. Используем тип Post[] вместо any[]
