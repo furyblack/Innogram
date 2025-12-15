@@ -1,0 +1,15 @@
+meta {
+  name: get user by id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_core_server}}/api/users/{{userId}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

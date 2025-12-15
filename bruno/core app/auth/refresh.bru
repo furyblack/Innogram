@@ -1,0 +1,16 @@
+meta {
+  name: refresh
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_core_server}}/api/auth/refresh
+  body: json
+  auth: none
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

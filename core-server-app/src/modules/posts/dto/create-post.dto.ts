@@ -7,9 +7,13 @@ export class CreatePostDto {
 
   @IsString()
   @IsNotEmpty()
-  body: string;
+  content: string;
 
   @IsString()
   @IsOptional()
-  status?: string = 'draft'; // например draft / published
+  status?: string = 'published';
+
+  @IsString()
+  @IsOptional()
+  imageUrl?: string;
 }

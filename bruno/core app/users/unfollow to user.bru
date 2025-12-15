@@ -1,0 +1,15 @@
+meta {
+  name: unfollow to user
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{base_core_server}}/api/users/Clocal_user/follow
+  body: none
+  auth: none
+}
+
+settings {
+  encodeUrl: true
+}

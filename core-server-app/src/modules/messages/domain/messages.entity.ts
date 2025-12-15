@@ -1,26 +1,46 @@
-import { User } from 'src/modules/users/domain/user.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
   CreateDateColumn,
+  UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
+import { Profile } from 'src/modules/profiles/domain/profile.entity';
+import { Chat } from 'src/modules/chat/domain/chat.entity';
 
-@Entity()
+@Entity('Messages')
 export class Message {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column()
-  body: string;
+  @Column({ type: 'text' })
+  content: string;
 
-  @CreateDateColumn()
-  created_at: Date;
+  @CreateDateColumn({ type: 'timestamp' })
+  createdAt: Date;
 
-  @ManyToOne(() => User, (user) => user.sentMessages)
-  sender: User;
+  @UpdateDateColumn({ type: 'timestamp' })
+  updatedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.receivedMessages)
-  receiver: User;
+  @Column({ default: false })
+  isEdited: boolean;
+
+  @Column({ default: false })
+  deleted: boolean;
+
+  @ManyToOne(() => Profile, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'profileId' })
+  profile: Profile;
+
+  @Column({ type: 'uuid' })
+  profileId: string;
+
+  @ManyToOne(() => Chat, (chat) => chat.messages, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'chatId' })
+  chat: Chat;
+
+  @Column({ type: 'uuid' })
+  chatId: string;
 }

@@ -1,0 +1,25 @@
+meta {
+  name: get me
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_core_server}}/api/auth/me
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "vasya@example.com",
+    "password": "Qwerty123!",
+    "username": "vasya",
+    "display_name": "Vasiliy Ivanich",
+    "birthday": "1999-01-01"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

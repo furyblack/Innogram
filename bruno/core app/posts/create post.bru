@@ -1,0 +1,23 @@
+meta {
+  name: create post
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_core_server}}/api/posts
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "Пост пользователя vasya",
+    "content": "проверка .",
+    "status":"published"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

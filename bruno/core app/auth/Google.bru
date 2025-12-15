@@ -1,0 +1,16 @@
+meta {
+  name: Google
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{base_core_server}}/api/auth/google/
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

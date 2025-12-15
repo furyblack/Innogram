@@ -7,7 +7,7 @@ export class UpdatePostDto {
 
   @IsString()
   @IsOptional()
-  body?: string;
+  content?: string;
 
   @IsString()
   @IsOptional()

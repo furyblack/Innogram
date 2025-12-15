@@ -1,4 +1,3 @@
-import { User } from 'src/modules/users/domain/user.entity';
 import { Post } from 'src/modules/posts/domain/post.entity';
 import {
   Entity,
@@ -7,26 +6,43 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
+  OneToMany,
 } from 'typeorm';
+import { Profile } from 'src/modules/profiles/domain/profile.entity';
+import { CommentLike } from 'src/modules/likes/domain/comment-like.entity'; // ✅ ИМПОРТ
 
-@Entity()
+@Entity('Comments')
 export class Comment {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'text' })
-  body: string;
+  content: string;
 
-  @CreateDateColumn()
-  created_at: Date;
+  @CreateDateColumn({ type: 'timestamp' })
+  createdAt: Date;
 
-  @UpdateDateColumn()
-  updated_at: Date;
+  @UpdateDateColumn({ type: 'timestamp' })
+  updatedAt: Date;
 
-  // Relationships
-  @ManyToOne(() => User, (user) => user.comments)
-  user: User;
+  // --- Связи ---
+  @ManyToOne(() => Profile, (profile) => profile.comments, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'profileId' })
+  profile: Profile;
 
-  @ManyToOne(() => Post, (post) => post.comments)
+  @Column({ type: 'uuid' })
+  profileId: string;
+
+  @ManyToOne(() => Post, (post) => post.comments, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'postId' })
   post: Post;
+
+  @Column({ type: 'uuid' })
+  postId: string;
+
+  @OneToMany(() => CommentLike, (like) => like.comment)
+  likes: CommentLike[];
 }

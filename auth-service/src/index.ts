@@ -1,29 +1,25 @@
-import * as dotenv from "dotenv";
-import app from "./app";
-import { checkDbConnection } from "./db"; // <-- Импортируем нашу проверку
-
-// Просто вызываем config() один раз. Этого достаточно.
+import 'reflect-metadata';
+import * as dotenv from 'dotenv';
 dotenv.config();
 
-// Порт берем из окружения, 4000 - как запасной вариант,
-// т.к. в docker-compose мы настроили именно его.
-const PORT = process.env.PORT || 4000;
+import app from './app';
+import { AppDataSource } from './db';
+import { connectRedis } from './utils/redis-client';
+
+const PORT = parseInt(process.env.PORT || '4000', 10);
 
 async function bootstrap() {
-  try {
-    // 1. Проверяем подключение к PostgreSQL
-    await checkDbConnection();
-
-    // 2. Если все хорошо, запускаем Express-сервер
-    app.listen(PORT, () => {
-      console.log(`🚀 Auth Service running on port ${PORT}`);
-    });
-  } catch (err) {
-    // Ошибка уже будет обработана в checkDbConnection,
-    // но на всякий случай оставим общий catch
-    console.error("❌ Failed to start server:", err);
-    process.exit(1);
-  }
+    try {
+        await connectRedis();
+        await AppDataSource.initialize();
+        console.log('✅ Auth Service: TypeORM (DataSource) connected.');
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`🚀 Auth Service (Express) running on port ${PORT}`);
+        });
+    } catch (err) {
+        console.error('❌ Failed to start server:', err);
+        process.exit(1);
+    }
 }
 
 bootstrap();

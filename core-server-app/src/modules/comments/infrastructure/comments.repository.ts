@@ -16,15 +16,16 @@ export class CommentsRepository {
     return await this.repo.save(comment);
   }
 
-  async findById(id: number): Promise<Comment | null> {
+  async findById(id: string): Promise<Comment | null> {
+    // <-- ТИП ИЗМЕНЕН
     return await this.repo.findOne({
       where: { id },
-      relations: ['user', 'post'],
+      relations: ['profile', 'post'], // <-- 'user' ИЗМЕНЕН на 'profile'
     });
   }
 
   async findByPost(
-    postId: number,
+    postId: string, // <-- ТИП ИЗМЕНЕН
     paginationDto: PaginationDto,
   ): Promise<Comment[]> {
     const { page = 1, limit = 10 } = paginationDto;
@@ -32,23 +33,24 @@ export class CommentsRepository {
 
     return await this.repo.find({
       where: { post: { id: postId } },
-      relations: ['user'],
-      order: { created_at: 'DESC' },
+      relations: ['profile'], // <-- 'user' ИЗМЕНЕН на 'profile'
+      order: { createdAt: 'DESC' },
       skip: skip,
       take: limit,
     });
   }
 
   async updateComment(
-    id: number,
+    id: string, // <-- ТИП ИЗМЕНЕН
     data: Partial<Comment>,
   ): Promise<Comment | null> {
     await this.repo.update(id, data);
     return this.findById(id);
   }
 
-  async deleteComment(id: number): Promise<boolean> {
+  async deleteComment(id: string): Promise<boolean> {
+    // <-- ТИП ИЗМЕНЕН
     const result = await this.repo.delete(id);
-    return result.affected !== 0;
+    return !!result.affected;
   }
 }

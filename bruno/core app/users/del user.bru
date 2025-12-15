@@ -1,0 +1,15 @@
+meta {
+  name: del user
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{base_core_server}}/api/users/{{userId}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
