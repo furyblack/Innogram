@@ -5,6 +5,7 @@ import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   dotenv.config();
@@ -33,6 +34,16 @@ async function bootstrap() {
   });
 
   const PORT = parseInt(process.env.PORT || '3001', 10);
+
+  const config = new DocumentBuilder()
+    .setTitle('Innogram API')
+    .setDescription('The social network API description')
+    .setVersion('1.0')
+    .addBearerAuth() // Добавляет кнопку для ввода токена
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document);
   await app.listen(PORT);
   Logger.log(`🚀 Core backend running on http://localhost:${PORT}/api`);
 }
