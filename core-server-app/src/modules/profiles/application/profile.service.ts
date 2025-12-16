@@ -34,4 +34,7 @@ export class ProfileService {
     // Сохраняем (TypeORM сам поймет, что это update, т.к. есть id)
     return this.profileRepo.save(profile);
   }
+  async searchProfiles(query: string) {
+    return this.profileRepo.searchProfiles(query);
+  }
 }

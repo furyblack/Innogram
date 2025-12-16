@@ -16,7 +16,7 @@ interface Comment {
 }
 
 interface PostProps {
-    post: Post; // <--- Используем общий тип
+    post: Post;
     isMyPost?: boolean;
     onDelete?: (id: string) => void;
 }
@@ -27,6 +27,9 @@ export default function PostCard({ post, isMyPost, onDelete }: PostProps) {
     const [showComments, setShowComments] = useState(false);
     const [commentText, setCommentText] = useState('');
     const [commentsList, setCommentsList] = useState<Comment[]>([]);
+    //  Стейты для редактирования
+    const [isEditing, setIsEditing] = useState(false);
+    const [content, setContent] = useState(post.content);
 
     // --- ЛАЙКИ ---
     const handleLike = async () => {
@@ -104,6 +107,25 @@ export default function PostCard({ post, isMyPost, onDelete }: PostProps) {
         }
     };
 
+    const handleUpdate = async () => {
+        try {
+            const res = await fetch(`/api/posts/${post.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content }), // Шлем новый текст
+            });
+
+            if (res.ok) {
+                setIsEditing(false); // Выходим из режима редактирования
+                alert('Post updated!');
+            } else {
+                alert('Failed to update');
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
     return (
         <div className="border border-gray-300 rounded bg-white mb-6 shadow-sm overflow-hidden">
             {/* HEADER */}
@@ -136,14 +158,21 @@ export default function PostCard({ post, isMyPost, onDelete }: PostProps) {
                     </div>
                 </Link>
 
-                {/* Кнопка удаления (показываем, если передан флаг isMyPost) */}
-                {isMyPost && (
-                    <button
-                        onClick={handleDelete}
-                        className="text-red-500 text-xs border border-red-200 p-1 rounded hover:bg-red-50"
-                    >
-                        🗑 Delete
-                    </button>
+                {isMyPost && !isEditing && (
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setIsEditing(true)}
+                            className="text-blue-500 text-xs border border-blue-200 p-1 rounded hover:bg-blue-50"
+                        >
+                            ✏️ Edit
+                        </button>
+                        <button
+                            onClick={handleDelete} // Твой старый handleDelete
+                            className="text-red-500 text-xs border border-red-200 p-1 rounded hover:bg-red-50"
+                        >
+                            🗑 Delete
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -152,14 +181,49 @@ export default function PostCard({ post, isMyPost, onDelete }: PostProps) {
                 <h3 className="font-bold text-lg text-black mb-2">
                     {post.title}
                 </h3>
-                <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">
-                    {post.content}
-                </p>
+
+                {/* 🔥 NEW: Логика переключения Text / Textarea */}
+                {isEditing ? (
+                    <div className="mb-3">
+                        <textarea
+                            className="w-full border border-blue-300 p-2 rounded text-black min-h-[100px]"
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                        />
+                        <div className="flex gap-2 mt-2">
+                            <button
+                                onClick={handleUpdate}
+                                className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                            >
+                                Save
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setIsEditing(false);
+                                    setContent(post.content); // Сброс при отмене
+                                }}
+                                className="bg-gray-400 text-white px-3 py-1 rounded text-sm hover:bg-gray-500"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">
+                        {content}{' '}
+                        {/* Показываем стейт content, чтобы он обновился сразу после сохранения */}
+                    </p>
+                )}
+
                 {post.imageUrl && (
                     <img
-                        src={post.imageUrl}
+                        src={
+                            post.imageUrl.startsWith('http')
+                                ? post.imageUrl
+                                : `http://localhost:3001/${post.imageUrl}`
+                        }
                         alt="Post"
-                        className="mt-3 w-full rounded border border-gray-200"
+                        className="mt-3 w-full rounded border border-gray-200 object-cover max-h-96"
                     />
                 )}
             </div>

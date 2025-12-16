@@ -1,0 +1,19 @@
+meta {
+  name: search profile
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_core_server}}/profile/search?q=vas
+  body: none
+  auth: inherit
+}
+
+params:query {
+  q: vas
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,21 @@
+meta {
+  name: serch posts
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{base_core_server}}/api/posts/search?q=mi&page=1
+  body: none
+  auth: inherit
+}
+
+params:query {
+  q: mi
+  page: 1
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
