@@ -16,6 +16,7 @@ import { CurrentUser } from 'src/modules/users/decorators/current-user';
 import { PostsService } from '../application/posts.service';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { UpdatePostDto } from '../dto/update-post.dto';
+import { SearchPostDto } from '../dto/search-post.dto';
 
 @Controller('posts')
 @UseGuards(AuthGuard('jwt'))
@@ -29,6 +30,13 @@ export class PostsController {
     @Body() dto: CreatePostDto,
   ) {
     return this.postsService.createPost(userId, dto);
+  }
+  @Get('search')
+  @UseGuards(AuthGuard('jwt'))
+  async search(@Query() searchDto: SearchPostDto) {
+    if (!searchDto.q) return [];
+
+    return this.postsService.searchPosts(searchDto.q, searchDto);
   }
 
   @Get('liked')

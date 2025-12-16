@@ -54,6 +54,12 @@ export default function RootLayout({
                     >
                         Explore
                     </Link>
+                    <Link
+                        href="/search"
+                        className="text-blue-700 font-medium hover:underline"
+                    >
+                        Search
+                    </Link>
                 </nav>
 
                 <main className="bg-white p-5 rounded shadow min-h-[500px] border border-gray-300">

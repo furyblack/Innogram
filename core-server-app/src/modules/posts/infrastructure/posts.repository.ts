@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from '../domain/post.entity';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { Profile } from 'src/modules/profiles/domain/profile.entity';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { UpdatePostDto } from '../dto/update-post.dto';
@@ -37,6 +37,23 @@ export class PostsRepository {
       where: { status: 'published' },
       relations: ['profile', 'comments'],
       skip: skip,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async searchPosts(query: string, paginationDto: PaginationDto) {
+    const { page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    return this.postRepo.find({
+      where: [
+        //ищем в заголовке или контенте
+        { title: ILike(`%${query}%`), status: 'published' },
+        { content: ILike(`%${query}%`), status: 'published' },
+      ],
+      relations: ['profile', 'comments', 'likes'],
+      skip,
       take: limit,
       order: { createdAt: 'DESC' },
     });

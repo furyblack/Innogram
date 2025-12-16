@@ -7,6 +7,7 @@ import {
   Body,
   UseGuards,
   ParseUUIDPipe,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from 'src/modules/users/decorators/current-user';
@@ -35,6 +36,12 @@ export class ProfileController {
 @Controller('profiles')
 export class PublicProfileController {
   constructor(private readonly profileService: ProfileService) {}
+
+  @Get('search')
+  async search(@Query('q') query: string) {
+    if (!query) return [];
+    return this.profileService.searchProfiles(query);
+  }
 
   @Get(':username')
   getUser(@Param('username') username: string) {

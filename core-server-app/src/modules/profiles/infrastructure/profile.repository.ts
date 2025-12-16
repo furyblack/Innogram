@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { Profile } from '../domain/profile.entity';
 
 @Injectable()
@@ -25,5 +25,15 @@ export class ProfileRepository {
   }
   async save(profile: Profile): Promise<Profile> {
     return this.repo.save(profile);
+  }
+
+  async searchProfiles(query: string) {
+    return this.repo.find({
+      where: [
+        { username: ILike(`%${query}%`) },
+        { displayName: ILike(`%${query}%`) },
+      ],
+      take: 20,
+    });
   }
 }

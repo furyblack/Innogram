@@ -104,4 +104,7 @@ export class PostsService {
 
     return this.postsRepo.findCommentedByProfileId(profile.id, paginationDto);
   }
+  async searchPosts(query: string, paginationDto: PaginationDto) {
+    return this.postsRepo.searchPosts(query, paginationDto);
+  }
 }
