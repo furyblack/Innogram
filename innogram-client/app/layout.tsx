@@ -31,6 +31,12 @@ export default function RootLayout({
                         Profile
                     </Link>
                     <Link
+                        href="/profile/edit"
+                        className="text-blue-700 font-medium hover:underline"
+                    >
+                        Edit Profile
+                    </Link>
+                    <Link
                         href="/feed"
                         className="text-blue-700 font-medium hover:underline"
                     >

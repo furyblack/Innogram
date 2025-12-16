@@ -73,15 +73,14 @@ export class PostsController {
 
   @Get(':id')
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    // <-- ИЗМЕНЕНО
     return this.postsService.findById(id);
   }
 
   @Patch(':id')
   @UseGuards(AuthGuard('jwt'))
   async update(
-    @Param('id', ParseUUIDPipe) id: string, // <-- ИЗМЕНЕНО
-    @CurrentUser('userId') userId: string, // <-- ТИП ИЗМЕНЕН
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('userId') userId: string,
     @Body() dto: UpdatePostDto,
   ) {
     return this.postsService.updatePost(id, userId, dto);
@@ -90,8 +89,8 @@ export class PostsController {
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
   async remove(
-    @Param('id', ParseUUIDPipe) id: string, // <-- ИЗМЕНЕНО
-    @CurrentUser('userId') userId: string, // <-- ТИП ИЗМЕНЕН
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('userId') userId: string,
   ) {
     return this.postsService.removePost(id, userId);
   }
