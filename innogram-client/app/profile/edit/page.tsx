@@ -11,6 +11,8 @@ export default function EditProfilePage() {
     const [bio, setBio] = useState('');
     const [avatarUrl, setAvatarUrl] = useState('');
 
+    const [isPrivate, setIsPrivate] = useState(false);
+
     // Загрузка текущих данных
     useEffect(() => {
         const fetchProfile = async () => {
@@ -21,6 +23,7 @@ export default function EditProfilePage() {
                     setDisplayName(data.displayName || '');
                     setBio(data.bio || '');
                     setAvatarUrl(data.avatarUrl || '');
+                    setIsPrivate(data.isPrivate || false);
                 }
             } catch (e) {
                 console.error(e);
@@ -66,12 +69,17 @@ export default function EditProfilePage() {
             const res = await fetch('/api/profile/me', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ displayName, bio, avatarUrl }),
+                body: JSON.stringify({
+                    displayName,
+                    bio,
+                    avatarUrl,
+                    isPrivate,
+                }),
             });
 
             if (res.ok) {
                 alert('Profile updated! ✅');
-                router.push('/profile/me'); // Или на страницу своего профиля
+                router.push('/profile/me');
             } else {
                 alert('Error updating profile');
             }
@@ -139,6 +147,27 @@ export default function EditProfilePage() {
                     onChange={(e) => setBio(e.target.value)}
                     placeholder="Tell something about yourself..."
                 />
+            </div>
+
+            <div className="mb-6 flex items-center gap-3 p-3 border rounded bg-gray-50">
+                <input
+                    type="checkbox"
+                    id="isPrivate"
+                    className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                    checked={isPrivate}
+                    onChange={(e) => setIsPrivate(e.target.checked)}
+                />
+                <label
+                    htmlFor="isPrivate"
+                    className="cursor-pointer select-none"
+                >
+                    <span className="block font-bold text-black">
+                        Private Account
+                    </span>
+                    <span className="text-xs text-gray-500">
+                        Only approved followers can see your posts.
+                    </span>
+                </label>
             </div>
 
             <button

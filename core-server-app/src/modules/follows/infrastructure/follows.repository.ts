@@ -10,14 +10,26 @@ export class FollowsRepository {
     private readonly repo: Repository<Follow>,
   ) {}
 
-  async create(followerId: string, followingId: string): Promise<void> {
-    // Используем save с созданием объекта, чтобы сработали хуки TypeORM если есть
-    const follow = this.repo.create({ followerId, followingId });
+  async create(
+    followerId: string,
+    followingId: string,
+    status: 'pending' | 'accepted',
+  ): Promise<void> {
+    const follow = this.repo.create({ followerId, followingId, status });
     await this.repo.save(follow);
   }
 
   async delete(followerId: string, followingId: string): Promise<void> {
     await this.repo.delete({ followerId, followingId });
+  }
+
+  async getFollowStatus(
+    followerId: string,
+    followingId: string,
+  ): Promise<Follow | null> {
+    return this.repo.findOne({
+      where: { followerId, followingId },
+    });
   }
 
   // Проверка: уже подписан?
@@ -28,12 +40,26 @@ export class FollowsRepository {
     return !!exists;
   }
 
-  // 🔥 ГЛАВНЫЙ МЕТОД ДЛЯ ЛЕНТЫ: Дай мне ID всех, на кого я подписан
   async getFollowingIds(followerId: string): Promise<string[]> {
     const follows = await this.repo.find({
-      where: { followerId },
+      where: { followerId, status: 'accepted' },
       select: ['followingId'],
     });
     return follows.map((f) => f.followingId);
+  }
+
+  async getIncomingRequests(userId: string) {
+    return this.repo.find({
+      where: { followingId: userId, status: 'pending' },
+      relations: ['follower'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async acceptRequest(followerId: string, myUserId: string) {
+    await this.repo.update(
+      { followerId, followingId: myUserId },
+      { status: 'accepted' },
+    );
   }
 }

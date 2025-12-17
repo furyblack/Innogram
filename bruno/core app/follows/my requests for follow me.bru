@@ -1,0 +1,15 @@
+meta {
+  name: my requests for follow me
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_core_server}}/api/follows/requests
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

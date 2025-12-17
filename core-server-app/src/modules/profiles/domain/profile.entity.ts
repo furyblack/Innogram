@@ -35,10 +35,6 @@ export class Profile {
   @Column({ type: 'varchar', length: 1000, nullable: true })
   avatarUrl: string;
 
-  // --- Новые поля из требований ---
-  @Column({ default: true })
-  isPublic: boolean;
-
   @Column({ default: false })
   deleted: boolean; // Для Soft Delete
 
@@ -54,6 +50,9 @@ export class Profile {
 
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
+
+  @Column({ default: false })
+  isPrivate: boolean;
 
   // --- Связи ---
   @OneToOne(() => User, (user) => user.profile, { onDelete: 'CASCADE' })
