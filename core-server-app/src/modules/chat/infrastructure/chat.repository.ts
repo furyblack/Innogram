@@ -10,14 +10,24 @@ export class ChatRepository {
     private readonly repo: Repository<Chat>,
   ) {}
 
-  async create(data: Partial<Chat>): Promise<Chat> {
-    const chat = this.repo.create(data);
+  // Твой старый метод
+  async findById(id: string): Promise<Chat | null> {
+    return this.repo.findOne({
+      where: { id },
+      relations: ['participants'], // Полезно сразу грузить участников
+    });
+  }
+
+  // 👇 ДОБАВЛЯЕМ ЭТОТ МЕТОД (Синхронный, создает объект в памяти)
+  create(data: DeepPartial<Chat>): Chat {
+    return this.repo.create(data);
+  }
+
+  // 👇 ДОБАВЛЯЕМ ЭТОТ МЕТОД (Асинхронный, сохраняет в БД)
+  async save(chat: Chat): Promise<Chat> {
     return this.repo.save(chat);
   }
-
-  async findById(id: string): Promise<Chat | null> {
-    return this.repo.findOneBy({ id });
-  }
-
-  // Сюда можно будет добавить поиск чатов по участнику (profile_id)
 }
+
+// Нужно для типизации data
+import { DeepPartial } from 'typeorm';

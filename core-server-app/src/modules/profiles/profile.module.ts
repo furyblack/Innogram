@@ -12,6 +12,6 @@ import {
   imports: [TypeOrmModule.forFeature([Profile])],
   controllers: [ProfileController, PublicProfileController],
   providers: [ProfileService, ProfileRepository],
-  exports: [ProfileRepository, ProfileService], // Экспортируем репозиторий
+  exports: [ProfileRepository, ProfileService],
 })
 export class ProfilesModule {}
