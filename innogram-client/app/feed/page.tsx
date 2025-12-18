@@ -14,7 +14,7 @@ export default function FeedPage() {
         // Объявляем функцию ВНУТРИ эффекта
         const fetchFeed = async () => {
             try {
-                const res = await fetch('/api/posts?page=1&limit=20');
+                const res = await fetch('/api/posts/feed?page=1&limit=20');
                 if (res.ok) {
                     const data = await res.json();
                     // Учитываем, что бэк может вернуть { items: [], meta: {} } или просто []

@@ -69,7 +69,7 @@ export class PostsService {
   async getFeed(userId: string, paginationDto: PaginationDto) {
     // 1. Находим СВОЙ профиль, чтобы узнать свой ID и добавить свои посты в ленту
     const myProfile = await this.profileRepo.findByUserId(userId);
-    if (!myProfile) return []; // Если профиля нет, ленты нет
+    if (!myProfile) return [];
 
     // 2. Получаем ID профилей, на которые мы подписаны
     const followingIds = await this.followsRepo.getFollowingIds(myProfile.id);

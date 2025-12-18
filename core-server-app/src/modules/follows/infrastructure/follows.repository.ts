@@ -42,7 +42,7 @@ export class FollowsRepository {
 
   async getFollowingIds(followerId: string): Promise<string[]> {
     const follows = await this.repo.find({
-      where: { followerId, status: 'accepted' },
+      where: { followerId: followerId, status: 'accepted' },
       select: ['followingId'],
     });
     return follows.map((f) => f.followingId);
