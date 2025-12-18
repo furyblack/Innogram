@@ -7,6 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Message } from 'src/modules/messages/domain/messages.entity';
+import { ChatParticipant } from './chat-participant.entity';
 
 export enum ChatType {
   PRIVATE = 'private',
@@ -19,7 +20,7 @@ export class Chat {
   id: string;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
-  name: string; // (null для 'private')
+  name: string;
 
   @Column({ type: 'text', nullable: true })
   description: string;
@@ -41,5 +42,6 @@ export class Chat {
   @OneToMany(() => Message, (message) => message.chat)
   messages: Message[];
 
-  // TODO: @OneToMany(() => ChatParticipant, ...)
+  @OneToMany(() => ChatParticipant, (participant) => participant.chat)
+  participants: ChatParticipant[];
 }

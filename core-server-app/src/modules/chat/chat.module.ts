@@ -4,15 +4,12 @@ import { Chat } from './domain/chat.entity';
 import { ChatRepository } from './infrastructure/chat.repository';
 import { ChatService } from './application/chat.service';
 import { ChatController } from './api/chat.controller';
-// import { ProfilesModule } from '../profiles/profile.module'; // Понадобится для проверки участников
+import { ChatParticipant } from './domain/chat-participant.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Chat]),
-    // ProfilesModule, // Раскомментировать, когда понадобится
-  ],
+  imports: [TypeOrmModule.forFeature([Chat, ChatParticipant])],
   controllers: [ChatController],
   providers: [ChatService, ChatRepository],
-  exports: [ChatRepository], // Экспортируем репозиторий для MessagesModule
+  exports: [ChatRepository],
 })
 export class ChatsModule {}
