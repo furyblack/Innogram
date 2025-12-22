@@ -64,12 +64,21 @@ export class ChatService {
     return chat;
   }
   async getMyChats(profileId: string) {
-    // Ищем записи, где я участник, и подгружаем сам чат + последнее сообщение
-    return this.participantRepo.find({
+    // 1. Ищем записи об участии
+    const participations = await this.participantRepo.find({
       where: { profileId },
-      relations: ['chat', 'chat.messages'], // В реале лучше использовать QueryBuilder
+      relations: [
+        'chat',
+        'chat.participants', // Загружаем ВСЕХ участников чата
+        'chat.participants.profile', // Загружаем ПРОФИЛИ участников (нужны для имен)
+        'chat.messages', // Историю сообщений
+      ],
       order: { joinedAt: 'DESC' },
     });
+
+    // 2. Возвращаем только объекты Чатов, а не объекты Участников
+    // Это то, чего ждет твой фронтенд
+    return participations.map((p) => p.chat);
   }
 
   async saveMessage(userId: string, chatId: string, content: string) {
