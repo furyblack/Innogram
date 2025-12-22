@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Message } from 'src/modules/messages/domain/messages.entity';
 import { ChatParticipant } from '../domain/chat-participant.entity';
+import { Profile } from 'src/modules/profiles/domain/profile.entity';
 
 @Injectable()
 export class ChatService {
@@ -14,6 +15,8 @@ export class ChatService {
     private readonly messageRepo: Repository<Message>,
     @InjectRepository(ChatParticipant)
     private participantRepo: Repository<ChatParticipant>,
+    @InjectRepository(Profile)
+    private readonly profileRepo: Repository<Profile>,
   ) {}
 
   async createChat(name: string, type: 'group' | 'private'): Promise<Chat> {
@@ -70,20 +73,29 @@ export class ChatService {
   }
 
   async saveMessage(userId: string, chatId: string, content: string) {
-    // 1. Проверяем чат через твой старый метод
-    const chat = await this.findChatById(chatId); // Тут уже есть проверка на ошибку
-
-    // 2. Создаем сообщение
-    const newMessage = this.messageRepo.create({
-      content,
-      chatId: chat.id, // Привязываем к чату
-      profileId: userId, // ⚠️ ВАЖНО: Тут мы пока пихаем userId как profileId.
-      // В идеале надо найти profile.id через ProfileRepository,
-      // но если у тебя userId == profile.userId, то пока сойдет.
-      // Лучше, конечно, сначала найти Profile.
+    // 1. Сначала находим ПРОФИЛЬ по UserID
+    // У тебя в ProfileEntity есть связь OneToOne с User, или поле userId.
+    // Если есть поле userId (как колонка), то ищем так:
+    const profile = await this.profileRepo.findOne({
+      where: { user: { id: userId } },
+      // ⚠️ Если у тебя в Profile entity поле называется userId (строка), то пиши { userId: userId }
     });
 
-    // 3. Сохраняем
+    if (!profile) {
+      throw new NotFoundException('Profile not found for this user');
+    }
+
+    // 2. Проверяем чат
+    const chat = await this.findChatById(chatId);
+
+    // 3. Создаем сообщение с НАСТОЯЩИМ ProfileID
+    const newMessage = this.messageRepo.create({
+      content,
+      chatId: chat.id,
+      profileId: profile.id, // 👈 Теперь тут правильный ID профиля
+    });
+
+    // 4. Сохраняем
     return this.messageRepo.save(newMessage);
   }
 }
