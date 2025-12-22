@@ -16,7 +16,8 @@ import { ChatService } from '../chat/application/chat.service';
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: 'http://localhost:3000',
+    credentials: true,
   },
 })
 export class EventsGateway
@@ -35,11 +36,26 @@ export class EventsGateway
     this.logger.log('WebSocket Gateway Initialized! 🚀');
   }
 
-  async handleConnection(client: Socket, ...args: any[]) {
+  async handleConnection(client: Socket) {
     try {
-      const token =
-        client.handshake.auth.token || client.handshake.headers.authorization;
-      if (!token) throw new Error('No token');
+      // 1. Пытаемся взять токен из auth (как раньше)
+      // ИЛИ достаем из кук вручную
+      let token = client.handshake.auth?.token;
+
+      if (!token && client.handshake.headers.cookie) {
+        // Парсим куку "access_token=..." из общей строки кук
+        const rawCookies = client.handshake.headers.cookie;
+        const cookieArray = rawCookies.split('; ');
+        const accessTokenCookie = cookieArray.find((c) =>
+          c.startsWith('access_token='),
+        );
+        if (accessTokenCookie) {
+          token = accessTokenCookie.split('=')[1];
+        }
+      }
+
+      if (!token) throw new Error('No token provided');
+
       const jwt = token.replace('Bearer ', '');
       const secret =
         this.configService.get<string>('JWT_ACCESS_SECRET') || 'access_secret';
@@ -50,6 +66,7 @@ export class EventsGateway
         `✅ Client connected: ${client.id} (User: ${payload.userId})`,
       );
     } catch (e) {
+      this.logger.error(`❌ Connection failed: ${e.message}`);
       client.disconnect();
     }
   }
