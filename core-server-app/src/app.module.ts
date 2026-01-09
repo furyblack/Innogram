@@ -14,6 +14,7 @@ import { ChatsModule } from './modules/chat/chat.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { FollowsModule } from './modules/follows/follows.module';
 import { AssetsModule } from './modules/assets/assets.module';
+import { EventsModule } from './modules/events/events.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { AssetsModule } from './modules/assets/assets.module';
     MessagesModule,
     FollowsModule,
     AssetsModule,
+    EventsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

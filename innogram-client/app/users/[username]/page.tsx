@@ -1,7 +1,6 @@
 'use client';
-import { useState, useEffect, use } from 'react'; // Импорт use для Next.js 13+ params
+import { useState, useEffect } from 'react';
 
-// Типизация (можно вынести, но пока тут)
 interface UserProfile {
     username: string;
     displayName: string;
@@ -16,10 +15,14 @@ export default function PublicProfilePage({
 }: {
     params: Promise<{ username: string }>;
 }) {
-    // В Next.js 15 params это Promise, поэтому используем use() или useEffect
     const [username, setUsername] = useState<string>('');
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // Стейт для статуса кнопки: 'none' (не подписан), 'pending' (заявка), 'following' (подписан)
+    const [followStatus, setFollowStatus] = useState<
+        'none' | 'pending' | 'following'
+    >('none');
 
     // Распаковка params
     useEffect(() => {
@@ -31,11 +34,32 @@ export default function PublicProfilePage({
 
     const fetchProfile = async (uName: string) => {
         try {
-            // Эндпоинт PublicProfileController: GET /api/profiles/:username
+            // 1. Грузим сам профиль
             const res = await fetch(`/api/profiles/${uName}`);
             if (res.ok) {
                 const data = await res.json();
                 setProfile(data);
+
+                // 🔥 2. ВАЖНО: Сразу проверяем статус подписки!
+                // Без этого кнопка будет забывать состояние после F5
+                try {
+                    const statusRes = await fetch(
+                        `/api/follows/${uName}/status`
+                    );
+                    if (statusRes.ok) {
+                        const statusData = await statusRes.json();
+                        console.log('Follow status:', statusData); // Отладка
+
+                        // Обновляем кнопку
+                        if (statusData.status === 'accepted')
+                            setFollowStatus('following');
+                        else if (statusData.status === 'pending')
+                            setFollowStatus('pending');
+                        else setFollowStatus('none');
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch follow status', err);
+                }
             } else {
                 setProfile(null);
             }
@@ -46,13 +70,75 @@ export default function PublicProfilePage({
         }
     };
 
+    // Логика ПОДПИСКИ
     const handleFollow = async () => {
-        if (!username) return;
-        const res = await fetch(`/api/users/${username}/follow`, {
-            method: 'POST',
-        });
-        if (res.ok) alert(`Followed ${username}!`);
-        else alert('Error following');
+        if (!profile) return;
+        try {
+            const res = await fetch(`/api/follows/${profile.username}`, {
+                method: 'POST',
+            });
+            if (res.ok) {
+                const data = await res.json();
+
+                if (data.status === 'pending') {
+                    setFollowStatus('pending');
+                    alert('🔒 Request sent! Waiting for approval.');
+                } else {
+                    setFollowStatus('following');
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    // отписка
+    const handleUnfollow = async () => {
+        if (!profile) return;
+        try {
+            const res = await fetch(`/api/follows/${profile.username}`, {
+                method: 'DELETE',
+            });
+            if (res.ok) {
+                setFollowStatus('none'); // Сбрасываем статус
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    // Умная кнопка
+    const renderFollowButton = () => {
+        if (followStatus === 'following') {
+            return (
+                <button
+                    onClick={handleUnfollow}
+                    className="bg-gray-200 text-black px-6 py-2 rounded-full font-bold hover:bg-gray-300 transition"
+                >
+                    Unfollow
+                </button>
+            );
+        }
+
+        if (followStatus === 'pending') {
+            return (
+                <button
+                    disabled
+                    className="bg-gray-400 text-white px-6 py-2 rounded-full font-bold cursor-not-allowed"
+                >
+                    ⏳ Requested
+                </button>
+            );
+        }
+
+        return (
+            <button
+                onClick={handleFollow}
+                className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-700 transition"
+            >
+                Follow
+            </button>
+        );
     };
 
     if (loading)
@@ -99,14 +185,24 @@ export default function PublicProfilePage({
                 <p className="text-gray-800 italic mb-6">{profile.bio}</p>
             )}
 
-            <button
-                onClick={handleFollow}
-                className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-700 transition"
-            >
-                Follow
-            </button>
+            {/* вызываем умную кнопку */}
+            <div className="mb-6">{renderFollowButton()}</div>
 
-            {/* Сюда можно добавить список постов этого юзера, если на бэке появится эндпоинт getPostsByUsername */}
+            <div className="flex justify-center gap-8 text-sm text-gray-600 border-t pt-4">
+                {/* Заглушки для счетчиков, пока их нет в API */}
+                <div>
+                    <span className="font-bold text-black">
+                        {profile.followersCount || 0}
+                    </span>{' '}
+                    followers
+                </div>
+                <div>
+                    <span className="font-bold text-black">
+                        {profile.followingCount || 0}
+                    </span>{' '}
+                    following
+                </div>
+            </div>
         </div>
     );
 }

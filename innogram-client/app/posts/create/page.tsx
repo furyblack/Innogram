@@ -85,26 +85,44 @@ export default function CreatePostPage() {
             />
 
             {/* Image Upload */}
-            <div className="mb-4">
-                <label className="block text-sm font-bold mb-2">
+            <div className="mb-6">
+                <label className="block text-sm font-bold mb-2 text-black">
                     Attach Image:
                 </label>
+
+                {/* 🔥 ВОТ ЭТОТ НОВЫЙ ИНПУТ */}
                 <input
                     type="file"
                     onChange={handleFileChange}
                     accept="image/*"
+                    className="block w-full text-sm text-slate-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100 cursor-pointer"
                 />
+
+                {/* Состояние загрузки */}
                 {uploading && (
-                    <p className="text-sm text-blue-500">Uploading...</p>
+                    <p className="text-sm text-blue-500 mt-2 animate-pulse">
+                        Uploading...
+                    </p>
                 )}
 
+                {/* Превью картинки */}
                 {imageUrl && (
-                    <div className="mt-2">
-                        <p className="text-xs text-green-600 mb-1">
-                            Image ready!
+                    <div className="mt-4 border border-gray-200 p-2 rounded bg-gray-50">
+                        <p className="text-xs text-green-600 mb-1 font-bold">
+                            ✅ Image ready!
                         </p>
+                        {/* Добавляем localhost если нужно, чтобы картинка не билась */}
                         <img
-                            src={imageUrl}
+                            src={
+                                imageUrl.startsWith('http')
+                                    ? imageUrl
+                                    : `http://localhost:3001/${imageUrl}`
+                            }
                             alt="Preview"
                             className="w-full h-48 object-cover rounded"
                         />

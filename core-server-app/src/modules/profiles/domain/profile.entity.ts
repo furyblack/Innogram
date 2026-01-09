@@ -14,8 +14,9 @@ import { Comment } from 'src/modules/comments/domain/comments.entity';
 import { PostLike } from 'src/modules/likes/domain/post-like.entity';
 import { CommentLike } from 'src/modules/likes/domain/comment-like.entity';
 import { Follow } from 'src/modules/follows/domain/follow.entity';
+import { ChatParticipant } from 'src/modules/chat/domain/chat-participant.entity';
 
-@Entity('Profiles') // CamelCase стиль таблицы
+@Entity('Profiles')
 export class Profile {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -35,12 +36,8 @@ export class Profile {
   @Column({ type: 'varchar', length: 1000, nullable: true })
   avatarUrl: string;
 
-  // --- Новые поля из требований ---
-  @Column({ default: true })
-  isPublic: boolean;
-
   @Column({ default: false })
-  deleted: boolean; // Для Soft Delete
+  deleted: boolean;
 
   // --- Аудит ---
   @Column({ type: 'uuid', nullable: true })
@@ -55,9 +52,12 @@ export class Profile {
   @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 
+  @Column({ default: false })
+  isPrivate: boolean;
+
   // --- Связи ---
   @OneToOne(() => User, (user) => user.profile, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' }) // В базе будет userId (camelCase, как ты любишь)
+  @JoinColumn({ name: 'userId' })
   user: User;
 
   @Column({ type: 'uuid', unique: true })
@@ -83,4 +83,7 @@ export class Profile {
   // Кто подписан на меня
   @OneToMany(() => Follow, (follow) => follow.following)
   followers: Follow[];
+
+  @OneToMany(() => ChatParticipant, (participant) => participant.profile)
+  participations: ChatParticipant[];
 }
