@@ -1,4 +1,4 @@
-import { PaginationDto } from './../../../common/pagination.dto';
+import { PaginationDto } from 'src/common/pagination.dto';
 import {
   Injectable,
   NotFoundException,
@@ -19,13 +19,11 @@ export class PostsService {
   ) {}
 
   async createPost(userId: string, dto: CreatePostDto) {
-    // <-- ТИП ИЗМЕНЕН (это User.id)
-    // Находим профиль по User ID
     const profile = await this.profileRepo.findByUserId(userId);
     if (!profile) {
       throw new NotFoundException('Profile not found for this user');
     }
-    // Создаем пост, используя ID профиля
+
     return this.postsRepo.createPost(profile.id, dto);
   }
 
@@ -34,40 +32,34 @@ export class PostsService {
   }
 
   async findById(id: string) {
-    // <-- ТИП ИЗМЕНЕН
     const post = await this.postsRepo.findById(id);
     if (!post) throw new NotFoundException('Post not found');
     return post;
   }
 
   async updatePost(id: string, userId: string, dto: UpdatePostDto) {
-    // <-- ТИПЫ ИЗМЕНЕНЫ
     const post = await this.findById(id);
     const profile = await this.profileRepo.findByUserId(userId);
     if (!profile) throw new NotFoundException('Profile not found');
 
     if (post.profile.id !== profile.id) {
-      // <-- ЛОГИКА ИЗМЕНЕНА
       throw new ForbiddenException('You can update only your posts');
     }
     return this.postsRepo.updatePost(id, dto);
   }
 
   async removePost(id: string, userId: string) {
-    // <-- ТИПЫ ИЗМЕНЕНЫ
     const post = await this.findById(id);
     const profile = await this.profileRepo.findByUserId(userId);
     if (!profile) throw new NotFoundException('Profile not found');
 
     if (post.profile.id !== profile.id) {
-      // <-- ЛОГИКА ИЗМЕНЕНА
       throw new ForbiddenException('You can delete only your posts');
     }
     return this.postsRepo.removePost(id);
   }
 
   async getMyPosts(userId: string, paginationDto: PaginationDto) {
-    // <-- ТИП ИЗМЕНЕН
     const profile = await this.profileRepo.findByUserId(userId);
     if (!profile) throw new NotFoundException('Profile not found');
 
@@ -75,20 +67,21 @@ export class PostsService {
   }
 
   async getFeed(userId: string, paginationDto: PaginationDto) {
-    // А. Находим мой профиль (чтобы узнать мой profileId)
+    // 1. Находим СВОЙ профиль, чтобы узнать свой ID и добавить свои посты в ленту
     const myProfile = await this.profileRepo.findByUserId(userId);
-    if (!myProfile) throw new NotFoundException('Profile not found');
+    if (!myProfile) return [];
 
-    // Б. Узнаем, на кого я подписан (получаем массив ID: ['uuid-1', 'uuid-2'])
+    // 2. Получаем ID профилей, на которые мы подписаны
     const followingIds = await this.followsRepo.getFollowingIds(myProfile.id);
 
-    // В. Если подписок нет — лента пустая
-    if (followingIds.length === 0) {
-      return [];
-    }
+    // 3. Собираем всё вместе: Мой ID + ID друзей
+    const targetProfileIds = [myProfile.id, ...followingIds];
 
-    // Г. Ищем посты этих авторов
-    return this.postsRepo.findByAuthorIds(followingIds, paginationDto);
+    // 4. Ищем посты
+    return this.postsRepo.findPostsByProfileIds(
+      targetProfileIds,
+      paginationDto,
+    );
   }
 
   async getLikedPosts(userId: string, paginationDto: PaginationDto) {

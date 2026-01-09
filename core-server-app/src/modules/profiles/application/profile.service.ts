@@ -30,6 +30,7 @@ export class ProfileService {
     if (dto.displayName) profile.displayName = dto.displayName;
     if (dto.bio) profile.bio = dto.bio;
     if (dto.avatarUrl) profile.avatarUrl = dto.avatarUrl;
+    if (dto.isPrivate !== undefined) profile.isPrivate = dto.isPrivate;
 
     // Сохраняем (TypeORM сам поймет, что это update, т.к. есть id)
     return this.profileRepo.save(profile);

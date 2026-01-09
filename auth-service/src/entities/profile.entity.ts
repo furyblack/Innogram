@@ -32,10 +32,6 @@ export class Profile {
     @Column({ type: 'varchar', length: 1000, nullable: true })
     avatarUrl!: string;
 
-    // --- Новые поля ---
-    @Column({ default: true })
-    isPublic!: boolean;
-
     @Column({ default: false })
     deleted!: boolean;
 

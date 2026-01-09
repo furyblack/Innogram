@@ -10,12 +10,11 @@ import {
 import { Profile } from 'src/modules/profiles/domain/profile.entity';
 
 @Entity('Follows')
-@Unique(['followerId', 'followingId']) // Нельзя подписаться на одного человека дважды
+@Unique(['followerId', 'followingId'])
 export class Follow {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // Тот, КТО подписывается (Подписчик)
   @ManyToOne(() => Profile, (profile) => profile.following, {
     onDelete: 'CASCADE',
   })
@@ -25,7 +24,6 @@ export class Follow {
   @Column({ type: 'uuid' })
   followerId: string;
 
-  // Тот, НА КОГО подписываются (Лидер мнений)
   @ManyToOne(() => Profile, (profile) => profile.followers, {
     onDelete: 'CASCADE',
   })
@@ -34,6 +32,9 @@ export class Follow {
 
   @Column({ type: 'uuid' })
   followingId: string;
+
+  @Column({ type: 'varchar', default: 'accepted' })
+  status: 'pending' | 'accepted';
 
   @CreateDateColumn()
   createdAt: Date;
