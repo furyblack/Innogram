@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface UserProfile {
     username: string;
@@ -15,6 +16,7 @@ export default function PublicProfilePage({
 }: {
     params: Promise<{ username: string }>;
 }) {
+    const router = useRouter();
     const [username, setUsername] = useState<string>('');
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
@@ -44,7 +46,7 @@ export default function PublicProfilePage({
                 // Без этого кнопка будет забывать состояние после F5
                 try {
                     const statusRes = await fetch(
-                        `/api/follows/${uName}/status`
+                        `/api/follows/${uName}/status`,
                     );
                     if (statusRes.ok) {
                         const statusData = await statusRes.json();
@@ -67,6 +69,27 @@ export default function PublicProfilePage({
             console.error(e);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleMessage = async () => {
+        if (!profile) return;
+        try {
+            // Пытаемся создать чат (или получить существующий)
+            const res = await fetch('/api/chats', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ targetUsername: profile.username }),
+            });
+
+            if (res.ok) {
+                // Если успех — перекидываем пользователя в раздел сообщений
+                router.push('/chats');
+            } else {
+                alert('Error starting chat');
+            }
+        } catch (e) {
+            console.error('Chat creation error', e);
         }
     };
 
@@ -185,11 +208,19 @@ export default function PublicProfilePage({
                 <p className="text-gray-800 italic mb-6">{profile.bio}</p>
             )}
 
-            {/* вызываем умную кнопку */}
-            <div className="mb-6">{renderFollowButton()}</div>
+            {/* 🔥 4. ОБНОВЛЕННЫЙ БЛОК КНОПОК */}
+            <div className="mb-6 flex justify-center gap-3">
+                {renderFollowButton()}
+
+                <button
+                    onClick={handleMessage}
+                    className="bg-white border border-gray-300 text-black px-6 py-2 rounded-full font-bold hover:bg-gray-50 transition shadow-sm"
+                >
+                    Message 💬
+                </button>
+            </div>
 
             <div className="flex justify-center gap-8 text-sm text-gray-600 border-t pt-4">
-                {/* Заглушки для счетчиков, пока их нет в API */}
                 <div>
                     <span className="font-bold text-black">
                         {profile.followersCount || 0}
