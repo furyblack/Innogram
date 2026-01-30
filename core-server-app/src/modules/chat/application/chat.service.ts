@@ -10,6 +10,8 @@ import { Profile } from 'src/modules/profiles/domain/profile.entity';
 @Injectable()
 export class ChatService {
   constructor(
+    @InjectRepository(Chat)
+    private readonly chatTypeOrmRepo: Repository<Chat>,
     private readonly chatRepo: ChatRepository,
     @InjectRepository(Message)
     private readonly messageRepo: Repository<Message>,
@@ -20,10 +22,6 @@ export class ChatService {
   ) {}
 
   async createChat(name: string, type: 'group' | 'private'): Promise<Chat> {
-    // Тут используем Partial, как у тебя было, или метод репозитория
-    // Если в репозитории create принимает объект, то ок.
-    // Если там create(chat: Chat), то нужно сначала создать инстанс.
-    // Предположим, твой репо умный:
     const chatData: Partial<Chat> = { name, type: type as ChatType };
     return this.chatRepo.create(chatData);
   }
@@ -37,23 +35,49 @@ export class ChatService {
   }
 
   async createPrivateChat(myProfileId: string, targetProfileId: string) {
-    // 1. Сначала проверим, нет ли уже такого чата (чтобы не плодить дубликаты)
-    // Это сложный SQL запрос, пока пропустим для простоты MVP.
-    // Считаем, что всегда создаем новый.
+    const existingChat = await this.chatTypeOrmRepo
+      .createQueryBuilder('chat')
+      .leftJoinAndSelect('chat.participants', 'participants')
+      .leftJoinAndSelect('participants.profile', 'profile')
+      .where('chat.type = :type', { type: ChatType.PRIVATE })
+      // Проверяем наличие первого участника (меня)
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('p1.chatId')
+          .from(ChatParticipant, 'p1')
+          .where('p1.profileId = :myId')
+          .getQuery();
+        return 'chat.id IN ' + subQuery;
+      })
+      // Проверяем наличие второго участника (его)
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('p2.chatId')
+          .from(ChatParticipant, 'p2')
+          .where('p2.profileId = :targetId')
+          .getQuery();
+        return 'chat.id IN ' + subQuery;
+      })
+      .setParameters({ myId: myProfileId, targetId: targetProfileId })
+      .getOne();
 
-    // 2. Создаем сам Чат
+    // Если чат найден — возвращаем его, не создавая новый!
+    if (existingChat) {
+      return existingChat;
+    }
+
     const chat = this.chatRepo.create({
       type: ChatType.PRIVATE,
     });
     await this.chatRepo.save(chat);
 
-    // 3. Добавляем ТЕБЯ
     const me = this.participantRepo.create({
       chatId: chat.id,
       profileId: myProfileId,
     });
 
-    // 4. Добавляем ЕГО
     const other = this.participantRepo.create({
       chatId: chat.id,
       profileId: targetProfileId,
