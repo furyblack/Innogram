@@ -8,31 +8,23 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { AssetsService } from '../application/assets.service';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { extname } from 'path';
 
 @Controller('assets')
-@UseGuards(AuthGuard('jwt')) // Загружать могут только свои
+@UseGuards(AuthGuard('jwt'))
 export class AssetsController {
   constructor(private readonly assetsService: AssetsService) {}
 
   @Post('upload')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads', // Папка сохранения (в корне core-server-app)
-        filename: (req, file, callback) => {
-          // Генерация уникального имени
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-        },
-      }),
+      storage: memoryStorage(), // 👈 Файл теперь не пишется на диск, а лежит в буфере
       limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
     }),
   )
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    return this.assetsService.saveFile(file);
+    // Передаем файл в сервис, который отправит его в S3 (MinIO)
+    return this.assetsService.saveFileToS3(file);
   }
 }

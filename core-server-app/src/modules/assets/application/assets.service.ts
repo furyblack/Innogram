@@ -1,32 +1,33 @@
-import { Injectable } from '@nestjs/common';
-import { AssetsRepository } from '../infrastructure/assets.repository';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { S3Service } from './s3.service';
 
 @Injectable()
 export class AssetsService {
   constructor(
-    private readonly assetsRepo: AssetsRepository,
-    private readonly configService: ConfigService,
+    private readonly s3Service: S3Service,
+    @Inject('NOTIFY_SERVICE') private readonly client: ClientProxy,
   ) {}
 
-  async saveFile(file: Express.Multer.File) {
-    // Генерируем публичный URL
-    // Например: http://localhost:3001/uploads/filename.jpg
-    const appUrl =
-      this.configService.get<string>('APP_URL') || 'http://localhost:3001';
-    const publicUrl = `${appUrl}/uploads/${file.filename}`;
+  async saveFileToS3(file: Express.Multer.File) {
+    // 1. Загружаем в облако (как и раньше)
+    const url = await this.s3Service.uploadFile(file);
 
-    const newAsset = await this.assetsRepo.createAsset({
-      fileName: file.filename,
-      originalName: file.originalname,
-      mimeType: file.mimetype,
+    // 2. ОТПРАВЛЯЕМ СОБЫТИЕ В RABBITMQ 🐰🚀
+    // Мы не ждем ответа (emit), просто кидаем сообщение
+    this.client.emit('avatar_uploaded', {
+      url,
+      fileName: file.originalname,
       size: file.size,
-      path: publicUrl, // Сохраняем сразу готовую ссылку
+      uploadedAt: new Date(),
     });
 
+    console.log('📬 Message sent to RabbitMQ: avatar_uploaded');
+
     return {
-      ...newAsset,
-      url: publicUrl,
+      url,
+      name: file.originalname,
+      size: file.size,
     };
   }
 }
