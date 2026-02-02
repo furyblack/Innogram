@@ -16,8 +16,16 @@ export class UserController {
     public static async login(req: Request, res: Response): Promise<void> {
         try {
             const { accessToken, refreshToken } = await UserService.login(
-                req.body
+                req.body,
             );
+
+            res.cookie('access_token', accessToken, {
+                httpOnly: true,
+                secure: false,
+                sameSite: 'lax',
+                maxAge: 15 * 60 * 1000, // 15 минут
+            });
+
             res.status(200).json({ accessToken, refreshToken });
         } catch (error) {
             const status = error.status || 401;
@@ -27,7 +35,7 @@ export class UserController {
 
     public static async socialLogin(
         req: Request,
-        res: Response
+        res: Response,
     ): Promise<void> {
         try {
             const tokens = await UserService.socialLogin(req.body);

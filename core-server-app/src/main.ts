@@ -30,7 +30,8 @@ async function bootstrap() {
 
   // включаем CORS
   app.enableCors({
-    origin: '*', // для разработки; в проде лучше список доменов
+    origin: 'http://localhost:3000',
+    credentials: true,
   });
 
   const PORT = parseInt(process.env.PORT || '3001', 10);
