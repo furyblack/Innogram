@@ -16,28 +16,26 @@ export class S3Service implements OnModuleInit {
   constructor(private configService: ConfigService) {
     this.s3Client = new S3Client({
       region: 'us-east-1',
-      // Используем 127.0.0.1, так как ты запускаешь бэк локально, а MinIO в докере
+      // Используем 127.0.0.1, так как запускаем бэк локально, а MinIO в докере
       endpoint: 'http://127.0.0.1:9000',
       forcePathStyle: true, // Критично для MinIO
       credentials: {
-        accessKeyId: 'minioadmin', // Проверь, что это совпадает с твоим .env
+        accessKeyId: 'minioadmin',
         secretAccessKey: 'minioadmin',
       },
     });
   }
 
-  // При запуске приложения проверяем/создаем корзину (бакет)
   async onModuleInit() {
     const bucketName = 'innogram-assets';
 
     try {
-      // 1. Проверяем/Создаем бакет (это у тебя уже есть)
       await this.s3Client.send(new HeadBucketCommand({ Bucket: bucketName }));
     } catch {
       await this.s3Client.send(new CreateBucketCommand({ Bucket: bucketName }));
     }
 
-    // 2. А ТЕПЕРЬ МАГИЯ: Делаем бакет публичным на чтение через код! 🚀
+    // Делаем бакет публичным на чтение через код!
     const readOnlyPolicy = {
       Version: '2012-10-17',
       Statement: [
