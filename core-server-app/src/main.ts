@@ -23,7 +23,6 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  // Раздача статических файлов из папки uploads
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
   });
