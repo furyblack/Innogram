@@ -39,7 +39,7 @@ async function bootstrap() {
     .setTitle('Innogram API')
     .setDescription('The social network API description')
     .setVersion('1.0')
-    .addBearerAuth() // Добавляет кнопку для ввода токена
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
