@@ -27,7 +27,6 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
 
-  // включаем CORS
   app.enableCors({
     origin: 'http://localhost:3000',
     credentials: true,
