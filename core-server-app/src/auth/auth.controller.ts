@@ -138,7 +138,7 @@ export class AuthController {
 
     // 2. Очищаем куки (ВАЖНО!)
     res.clearCookie('access_token');
-    res.clearCookie('refresh_token', { path: '/auth/refresh' }); // Путь важен, если он был задан при создании
+    res.clearCookie('refresh_token', { path: '/auth/refresh' });
 
     return { message: 'Logged out successfully' };
   }
