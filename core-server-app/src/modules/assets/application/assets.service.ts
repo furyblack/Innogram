@@ -13,7 +13,7 @@ export class AssetsService {
     // 1. Загружаем в облако (как и раньше)
     const url = await this.s3Service.uploadFile(file);
 
-    // 2. ОТПРАВЛЯЕМ СОБЫТИЕ В RABBITMQ 
+    // 2. ОТПРАВЛЯЕМ СОБЫТИЕ В RABBITMQ
     // Мы не ждем ответа (emit), просто кидаем сообщение
     this.client.emit('avatar_uploaded', {
       url,
