@@ -12,19 +12,19 @@ export class Asset {
   id: string;
 
   @Column()
-  fileName: string; // Имя файла на диске (хеш)
+  fileName: string;
 
   @Column()
-  originalName: string; // Оригинальное название
+  originalName: string;
 
   @Column()
-  mimeType: string; // image/jpeg и т.д.
+  mimeType: string;
 
   @Column('int')
   size: number;
 
   @Column()
-  path: string; // Относительный путь или URL
+  path: string;
 
   @CreateDateColumn()
   createdAt: Date;
