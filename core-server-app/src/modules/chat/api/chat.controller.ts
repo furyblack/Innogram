@@ -39,7 +39,7 @@ export class ChatController {
   }
 
   // 2. Получить мои чаты
-  // GET /api/chats
+
   @Get()
   async getMyChats(@CurrentUser('userId') userId: string) {
     const myProfile = await this.profileService.getProfileByUserId(userId);
