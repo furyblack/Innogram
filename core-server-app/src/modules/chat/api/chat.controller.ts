@@ -22,7 +22,7 @@ export class ChatController {
 
   // 1. Создать чат с кем-то
   // POST /api/chats
-  // Body: { targetUsername: "peter" }
+ 
   @Post()
   async createChat(
     @CurrentUser('userId') userId: string,
